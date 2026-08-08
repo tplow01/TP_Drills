@@ -95,12 +95,15 @@ create table drill (
 -- The library list is always "this library, not deleted".
 create index drill_library_live_idx on drill (library) where deleted_at is null;
 
-create or replace function set_updated_at() returns trigger as $$
+create or replace function set_updated_at() returns trigger
+  language plpgsql
+  set search_path = public
+as $$
 begin
   new.updated_at = now();
   return new;
 end;
-$$ language plpgsql;
+$$;
 
 create trigger drill_updated_at
   before update on drill

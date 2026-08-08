@@ -1,0 +1,61 @@
+:root {
+  --ground: #151515;
+  --card: #1f1f1f;
+  --ink: #f3f0ea;
+  --accent: #f15e22;
+
+  --ink-70: rgba(243, 240, 234, 0.70);
+  --ink-45: rgba(243, 240, 234, 0.45);
+  --ink-30: rgba(243, 240, 234, 0.30);
+  --hairline: rgba(243, 240, 234, 0.09);
+
+  --radius: 10px;
+  --radius-sm: 6px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--ground);
+  color: var(--ink);
+}
+
+body {
+  font-family: var(--font-mona), system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Headline. Every h1-h4 and anything marked .hl. */
+.hl, h1, h2, h3, h4 {
+  font-family: var(--font-hubot), system-ui, sans-serif;
+  font-weight: 800;
+  font-style: italic;
+  text-transform: uppercase;
+  letter-spacing: -0.035em;
+  line-height: 0.92;
+  margin: 0;
+}
+
+.bd {
+  font-family: var(--font-mona), system-ui, sans-serif;
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+
+/* Small uppercase label. */
+.lbl {
+  font-family: var(--font-mona), system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.11em;
+  color: var(--ink-30);
+}
+
+button { font: inherit; color: inherit; cursor: pointer; }
+a { color: inherit; text-decoration: none; }

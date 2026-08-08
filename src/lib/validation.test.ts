@@ -38,6 +38,11 @@ describe('missingFields', () => {
     expect(missingFields(gk)).toEqual([])
   })
 
+  it('rejects a stale age band left over from switching to goalkeeping', () => {
+    const gk = input({ library: 'goalkeeping', type: 'shot_stopping', age_band: 'U9-U11' })
+    expect(missingFields(gk)).toContain('age_band')
+  })
+
   it('requires name, setup and how_it_works to be non-blank', () => {
     const got = missingFields(input({ name: '  ', setup: '', how_it_works: '   ' }))
     expect(got).toContain('name')

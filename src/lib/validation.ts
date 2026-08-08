@@ -30,7 +30,9 @@ export function missingFields(input: DrillInput): RequiredField[] {
   if (!input.type) missing.push('type')
 
   // Outfield requires an age band; goalkeeping must never have one (spec 5.3).
-  if (input.library === 'outfield' && input.age_band === null) missing.push('age_band')
+  if (input.library === 'outfield' ? input.age_band === null : input.age_band !== null) {
+    missing.push('age_band')
+  }
 
   if (input.duration_mins === null || input.duration_mins <= 0) missing.push('duration_mins')
   if (input.players_min === null || input.players_min <= 0) missing.push('players_min')

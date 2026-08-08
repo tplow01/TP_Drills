@@ -33,7 +33,10 @@ export async function compressImage(file: File): Promise<Blob> {
   canvas.width = width
   canvas.height = height
   const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('Canvas 2D context unavailable')
+  if (!ctx) {
+    bitmap.close()
+    throw new Error('Canvas 2D context unavailable')
+  }
   ctx.drawImage(bitmap, 0, 0, width, height)
   bitmap.close()
 

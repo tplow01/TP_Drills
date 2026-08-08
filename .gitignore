@@ -2,3 +2,5 @@
 node_modules/
 .next/
 .env*.local
+supabase.md
+.DS_Store

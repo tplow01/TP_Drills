@@ -33,3 +33,16 @@ export async function getDrill(id: string): Promise<Drill | null> {
   if (error) throw new Error(`Failed to load drill: ${error.message}`)
   return (data as Drill) ?? null
 }
+
+/**
+ * How many sessions use this drill. Phase 1 has no session table yet, so this
+ * returns 0 and the delete dialog says "not used in any session". Phase 2
+ * replaces the body with a count over session_drill, which means a
+ * `createServerClient()` call — i.e. `next/headers` — same as listDrills and
+ * getDrill above. It belongs in this server-only module for that reason even
+ * though the Phase 1 body touches no Supabase client yet: keep it here, do
+ * not move it back to `./drills` when Phase 2 implements the real query.
+ */
+export async function countSessionsUsing(_drillId: string): Promise<number> {
+  return 0
+}

@@ -208,7 +208,7 @@ export function DrillForm({
                     </div>
                     {draft.coaching_points.length > 1 && (
                       <Button
-                        variant="ghost"
+                        variant="muted"
                         onClick={() => set('coaching_points', draft.coaching_points.filter((_, j) => j !== i))}
                       >
                         ×
@@ -241,8 +241,14 @@ export function DrillForm({
               />
             </Field>
             <Field label="Bibs">
+              {/* Bibs needed is a live state, so accent is legitimate here
+                  (unlike the coaching-point "×"). Box shape stays a plain
+                  secondary control; only the label colour carries the state,
+                  matching the brief's original cue. */}
               <Button variant="secondary" onClick={() => set('bibs_needed', !draft.bibs_needed)} fullWidth>
-                {draft.bibs_needed ? 'Needed' : 'Not needed'}
+                <span style={{ color: draft.bibs_needed ? 'var(--accent)' : 'var(--ink-45)' }}>
+                  {draft.bibs_needed ? 'Needed' : 'Not needed'}
+                </span>
               </Button>
             </Field>
           </div>

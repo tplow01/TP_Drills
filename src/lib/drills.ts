@@ -4,8 +4,8 @@ import type { Drill, DrillInput } from './types'
 
 /**
  * Browser-side writes, safe to import from client components. Server-side
- * reads (listDrills, getDrill) live in `./drills-server` — see that file for
- * why they are split out.
+ * reads (listDrills, getDrill, countSessionsUsing) live in `./drills-server`
+ * — see that file for why they are split out.
  */
 
 /** Browser-side. `library` is set here once and never updated again. */
@@ -49,13 +49,4 @@ export async function uploadDrillImage(file: File): Promise<string> {
 
   const { data } = supabase.storage.from('drill-images').getPublicUrl(path)
   return data.publicUrl
-}
-
-/**
- * How many sessions use this drill. Phase 1 has no session table yet, so this
- * returns 0 and the delete dialog says "not used in any session". Phase 2
- * replaces the body with a count over session_drill; the signature does not change.
- */
-export async function countSessionsUsing(_drillId: string): Promise<number> {
-  return 0
 }

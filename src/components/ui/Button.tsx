@@ -2,7 +2,7 @@
 
 import type { ReactNode } from 'react'
 
-type ButtonVariant = 'primary' | 'secondary' | 'ghost'
+type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'muted'
 
 const variantStyle: Record<ButtonVariant, React.CSSProperties> = {
   primary: {
@@ -18,6 +18,15 @@ const variantStyle: Record<ButtonVariant, React.CSSProperties> = {
   ghost: {
     background: 'none',
     color: 'var(--accent)',
+    border: 'none',
+    padding: 0,
+  },
+  // No background, no border, muted ink text. For row-level actions (e.g.
+  // "remove this line") that must not read as live/actionable the way accent
+  // does — orange is rationed to what is live, earned or actionable.
+  muted: {
+    background: 'none',
+    color: 'var(--ink-45)',
     border: 'none',
     padding: 0,
   },
@@ -38,7 +47,7 @@ export function Button({
   type?: 'button' | 'submit'
   fullWidth?: boolean
 }) {
-  const isGhost = variant === 'ghost'
+  const isGhost = variant === 'ghost' || variant === 'muted'
   return (
     <button
       type={type}

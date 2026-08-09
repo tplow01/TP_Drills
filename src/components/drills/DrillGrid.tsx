@@ -7,11 +7,16 @@ export function DrillGrid({
   drills,
   browseState,
   emptyState,
+  onAdd,
+  addedIds,
 }: {
   drills: Drill[]
   /** Rides along in each card's href so Back returns to this exact list. */
   browseState: DrillBrowseState
   emptyState: ReactNode
+  /** Present only when the session tray is up (spec 7.4). */
+  onAdd?: (drill: Drill) => void
+  addedIds?: ReadonlySet<string>
 }) {
   if (drills.length === 0) return <>{emptyState}</>
   return (
@@ -23,7 +28,13 @@ export function DrillGrid({
       }}
     >
       {drills.map((drill) => (
-        <DrillCard key={drill.id} drill={drill} browseState={browseState} />
+        <DrillCard
+          key={drill.id}
+          drill={drill}
+          browseState={browseState}
+          onAdd={onAdd ? () => onAdd(drill) : undefined}
+          added={addedIds?.has(drill.id) ?? false}
+        />
       ))}
     </div>
   )

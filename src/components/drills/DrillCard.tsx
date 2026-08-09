@@ -14,23 +14,38 @@ function playersLabel(drill: Drill): string {
 export function DrillCard({
   drill,
   browseState,
+  onAdd,
+  added = false,
 }: {
   drill: Drill
   browseState: DrillBrowseState
+  /**
+   * Present only when the session tray is up (spec 7.4). Its absence is
+   * what keeps the `+` off every card on an ordinary visit to /drills.
+   */
+  onAdd?: () => void
+  added?: boolean
 }) {
+  // A draft cannot be added to a session (spec 7.2). In practice drafts
+  // never reach this component — DrillsBrowser pins them above the grid,
+  // outside the addable list — but the card guards it directly too, so the
+  // rule holds even if that ever changes.
+  const showAdd = onAdd !== undefined && !drill.is_draft
+
   return (
-    <Link
-      // Carries the list's filter and sort, so Back on the detail screen
-      // returns to the list as it was left (spec 7.1).
-      href={drillHref(drill.id, browseState)}
-      style={{
-        display: 'block',
-        background: 'var(--card)',
-        border: `1px solid ${drill.is_draft ? 'var(--accent-border)' : 'var(--hairline)'}`,
-        borderRadius: 'var(--radius)',
-        padding: 12,
-      }}
-    >
+    <div style={{ position: 'relative' }}>
+      <Link
+        // Carries the list's filter and sort, so Back on the detail screen
+        // returns to the list as it was left (spec 7.1).
+        href={drillHref(drill.id, browseState)}
+        style={{
+          display: 'block',
+          background: 'var(--card)',
+          border: `1px solid ${drill.is_draft ? 'var(--accent-border)' : 'var(--hairline)'}`,
+          borderRadius: 'var(--radius)',
+          padding: 12,
+        }}
+      >
       {/* Cream mat: contains the image rather than cropping it, so a grid of
           white-paper diagrams reads as consistent shapes. */}
       <div
@@ -85,6 +100,50 @@ export function DrillCard({
           Draft — needs finishing
         </div>
       )}
-    </Link>
+      </Link>
+
+      {onAdd !== undefined && (
+        <button
+          type="button"
+          // Sibling of the Link, not nested inside it — the card as a whole
+          // still opens the drill; this is a separate hit target layered on
+          // top, so it needs to stop the click reaching the anchor.
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            onAdd?.()
+          }}
+          disabled={!showAdd || added}
+          aria-label={
+            !showAdd
+              ? 'Finish this draft before it can be added to a session'
+              : added
+                ? `${drill.name} already added`
+                : `Add ${drill.name} to session`
+          }
+          title={!showAdd ? 'Finish this draft before it can be added to a session' : undefined}
+          style={{
+            position: 'absolute',
+            top: 8,
+            right: 8,
+            width: 26,
+            height: 26,
+            borderRadius: '50%',
+            border: 'none',
+            display: 'grid',
+            placeItems: 'center',
+            fontSize: 15,
+            fontWeight: 700,
+            lineHeight: 1,
+            background: added ? 'var(--chip-bg)' : 'var(--accent)',
+            color: added ? 'var(--ink-45)' : 'var(--ground)',
+            opacity: !showAdd ? 0.4 : 1,
+            cursor: !showAdd || added ? 'not-allowed' : 'pointer',
+          }}
+        >
+          {added ? '✓' : '+'}
+        </button>
+      )}
+    </div>
   )
 }

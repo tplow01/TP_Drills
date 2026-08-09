@@ -19,6 +19,7 @@ const busy: DrillBrowseState = {
   },
   sortKey: 'players_min',
   sortDir: 'desc',
+  session: null,
 }
 
 describe('parseBrowseState', () => {
@@ -63,6 +64,12 @@ describe('parseBrowseState', () => {
     expect(parse('lib=martian').library).toBe('outfield')
     expect(parse('lib=goalkeeping').library).toBe('goalkeeping')
   })
+
+  it('reads a session id, and treats a blank one as absent', () => {
+    expect(parse('session=abc-123').session).toBe('abc-123')
+    expect(parse('session=').session).toBeNull()
+    expect(parse('').session).toBeNull()
+  })
 })
 
 describe('browseStateToQuery', () => {
@@ -87,6 +94,13 @@ describe('browseStateToQuery', () => {
   it('round-trips any state', () => {
     expect(parse(browseStateToQuery(busy))).toEqual(busy)
     expect(parse(browseStateToQuery(DEFAULT_BROWSE_STATE))).toEqual(DEFAULT_BROWSE_STATE)
+  })
+
+  it('carries a session id through the query, and drops it when absent', () => {
+    const withSession: DrillBrowseState = { ...DEFAULT_BROWSE_STATE, session: 'sess-1' }
+    expect(browseStateToQuery(withSession)).toBe('session=sess-1')
+    expect(drillsHref(withSession)).toBe('/drills?session=sess-1')
+    expect(parse(browseStateToQuery(withSession))).toEqual(withSession)
   })
 })
 
@@ -115,5 +129,30 @@ describe('drillHref and backToDrillsHref', () => {
     expect(backToDrillsHref('https://evil.example/x')).toBe('/drills')
     expect(backToDrillsHref('//evil.example')).toBe('/drills')
     expect(backToDrillsHref('lib=goalkeeping&next=//evil.example')).toBe('/drills?lib=goalkeeping')
+  })
+
+  it('carries a session id as its own top-level param, not nested inside back', () => {
+    const withSession: DrillBrowseState = { ...busy, session: 'sess-1' }
+    const href = drillHref('abc', withSession)
+    expect(href).toContain('session=sess-1')
+
+    const query = new URLSearchParams(href.split('?')[1])
+    expect(query.get('session')).toBe('sess-1')
+    // `back` carries the rest of the browse state, minus the session id —
+    // the drill detail page (Task 7) reads `session` directly to decide its
+    // own back-to-planner control, so it must not be buried in the opaque
+    // `back` blob.
+    const back = query.get('back')!
+    expect(parse(back)).toEqual({ ...busy, session: null })
+  })
+
+  it('links with only a session id when there is nothing else to carry', () => {
+    expect(drillHref('abc', { ...DEFAULT_BROWSE_STATE, session: 'sess-1' })).toBe('/drills/abc?session=sess-1')
+  })
+
+  it('backToDrillsHref never resurrects a session id from back, since drillHref never puts one there', () => {
+    const href = drillHref('abc', { ...busy, session: 'sess-1' })
+    const back = new URLSearchParams(href.split('?')[1]).get('back')!
+    expect(backToDrillsHref(back).includes('session=')).toBe(false)
   })
 })

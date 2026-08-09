@@ -103,3 +103,35 @@ a { color: inherit; text-decoration: none; }
   .planner-layout[data-has-selection="true"] .planner-list-pane { display: none; }
   .planner-layout[data-has-selection="false"] .planner-detail-pane { display: none; }
 }
+
+/* Session tray on Drills (spec 7.4, Task 8): a right rail on desktop, a
+   docked bar pinned to the bottom of the viewport on phone. Only rendered
+   at all when arriving from the Planner with ?session=<id> — the tray is
+   conditional, never permanent furniture on the library. */
+.session-tray {
+  width: 240px;
+  flex: none;
+  border-left: 1px solid var(--hairline);
+  align-self: stretch;
+}
+.session-tray-inner { padding: 18px 16px; position: sticky; top: 0; }
+
+@media (max-width: 780px) {
+  .session-tray {
+    width: 100%;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-left: none;
+    border-top: 1px solid var(--hairline);
+    background: var(--ground);
+    max-height: 45vh;
+    overflow-y: auto;
+    z-index: 15;
+  }
+  .session-tray-inner { position: static; padding: 12px 16px calc(12px + env(safe-area-inset-bottom)); }
+  .session-tray-list { max-height: 22vh; overflow-y: auto; }
+  /* Room for the docked tray so the last drill cards aren't hidden behind it. */
+  .drills-content-with-tray { padding-bottom: 220px; }
+}

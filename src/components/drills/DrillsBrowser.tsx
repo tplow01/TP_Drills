@@ -8,10 +8,12 @@ import {
 import type { DrillFilter } from '@/lib/filters'
 import { browseStateToQuery, drillHref, parseBrowseState } from '@/lib/drill-query'
 import type { DrillBrowseState } from '@/lib/drill-query'
-import type { Drill, Library } from '@/lib/types'
+import { addDrillToSession } from '@/lib/sessions'
+import type { Drill, Library, SessionWithDrills } from '@/lib/types'
 import { Segment } from '@/components/ui/Segment'
 import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/TextInput'
+import { SessionTray } from '@/components/sessions/SessionTray'
 import { ActiveFilterSummary } from './ActiveFilterSummary'
 import { DrillGrid } from './DrillGrid'
 import { FilterPanel } from './FilterPanel'
@@ -26,9 +28,16 @@ const AXIS_LABELS: Record<string, string> = {
 export function DrillsBrowser({
   outfield,
   goalkeeping,
+  session: initialSession,
 }: {
   outfield: Drill[]
   goalkeeping: Drill[]
+  /**
+   * Set only when arrived at from the Planner via `?session=<id>` (spec
+   * 7.4). Its presence is the sole trigger for the tray, the bottom dock and
+   * the per-card `+` — absent on every other visit to /drills.
+   */
+  session?: SessionWithDrills | null
 }) {
   const params = useSearchParams()
 
@@ -40,6 +49,32 @@ export function DrillsBrowser({
    */
   const [state, setState] = useState<DrillBrowseState>(() => parseBrowseState(params))
   const [sheetOpen, setSheetOpen] = useState(false)
+
+  // Local, optimistic view of the session so a card can mark itself added
+  // and the tray's running total can move without a page reload. Seeded
+  // from the server-loaded session and appended to as adds succeed.
+  const [session, setSession] = useState<SessionWithDrills | null>(initialSession ?? null)
+  const [addError, setAddError] = useState<string | null>(null)
+  const [busyDrillId, setBusyDrillId] = useState<string | null>(null)
+
+  const addedIds = useMemo(
+    () => new Set((session?.drills ?? []).map((d) => d.drill_id)),
+    [session],
+  )
+
+  async function handleAdd(drill: Drill) {
+    if (!session || busyDrillId !== null || addedIds.has(drill.id)) return
+    setAddError(null)
+    setBusyDrillId(drill.id)
+    try {
+      const created = await addDrillToSession(session.id, drill.id)
+      setSession((s) => (s ? { ...s, drills: [...s.drills, { ...created, drill }] } : s))
+    } catch (e) {
+      setAddError(e instanceof Error ? e.message : `Failed to add ${drill.name}`)
+    } finally {
+      setBusyDrillId(null)
+    }
+  }
 
   const query = browseStateToQuery(state)
 
@@ -116,7 +151,10 @@ export function DrillsBrowser({
         {panel}
       </aside>
 
-      <div style={{ flex: 1, minWidth: 0, padding: '18px 18px 28px' }}>
+      <div
+        className={session ? 'drills-content-with-tray' : undefined}
+        style={{ flex: 1, minWidth: 0, padding: '18px 18px 28px' }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <Segment value={library} onChange={switchLibrary} />
           <span style={{ marginLeft: 'auto' }}>
@@ -177,8 +215,25 @@ export function DrillsBrowser({
           </div>
         )}
 
-        <DrillGrid drills={results} browseState={state} emptyState={emptyState} />
+        {addError && (
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)', marginBottom: 12 }}>
+            {addError}
+          </div>
+        )}
+
+        <DrillGrid
+          drills={results}
+          browseState={state}
+          emptyState={emptyState}
+          onAdd={session ? handleAdd : undefined}
+          addedIds={session ? addedIds : undefined}
+        />
       </div>
+
+      {/* The tray is conditional (spec 7.4): present only when arrived at
+          from the Planner. An ordinary visit to /drills renders none of
+          this — no tray, no dock, no per-card +. */}
+      {session && <SessionTray session={session} />}
 
       {sheetOpen && (
         <div

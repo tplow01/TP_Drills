@@ -17,6 +17,15 @@ export interface DrillBrowseState {
   filter: DrillFilter
   sortKey: SortKey
   sortDir: SortDir
+  /**
+   * Set only when arriving from the Planner (spec 7.4): `/drills?session=<id>`.
+   * Its presence is what turns the session tray, the bottom dock and the
+   * per-card `+` on — carrying it through the browse state means every href
+   * built off that state (drillsHref, drillHref, the URL mirror in
+   * DrillsBrowser) keeps it, so the tray stays up across filtering and a
+   * trip into a drill and back.
+   */
+  session: string | null
 }
 
 export const DEFAULT_BROWSE_STATE: DrillBrowseState = {
@@ -24,6 +33,7 @@ export const DEFAULT_BROWSE_STATE: DrillBrowseState = {
   filter: EMPTY_FILTER,
   sortKey: 'duration',
   sortDir: 'asc',
+  session: null,
 }
 
 const ALL_TYPES: readonly string[] = [...OUTFIELD_TYPES, ...GK_TYPES]
@@ -70,7 +80,10 @@ export function parseBrowseState(params: URLSearchParams): DrillBrowseState {
   const sortKey: SortKey = SORT_KEYS.includes(rawKey) ? (rawKey as SortKey) : 'duration'
   const sortDir: SortDir = rawDir === 'desc' ? 'desc' : 'asc'
 
-  return { library, filter, sortKey, sortDir }
+  const rawSession = params.get('session')
+  const session = rawSession !== null && rawSession.trim() !== '' ? rawSession : null
+
+  return { library, filter, sortKey, sortDir, session }
 }
 
 /**
@@ -79,6 +92,7 @@ export function parseBrowseState(params: URLSearchParams): DrillBrowseState {
  */
 export function browseStateToQuery(state: DrillBrowseState): string {
   const params = new URLSearchParams()
+  if (state.session !== null) params.set('session', state.session)
   if (state.library !== 'outfield') params.set('lib', state.library)
   if (state.filter.types.length > 0) params.set('type', state.filter.types.join(','))
   if (state.filter.ageBands.length > 0) params.set('age', state.filter.ageBands.join(','))
@@ -105,8 +119,16 @@ export function drillsHref(state: DrillBrowseState): string {
  * browser's own back button is not the only way home.
  */
 export function drillHref(id: string, state: DrillBrowseState): string {
-  const query = browseStateToQuery(state)
-  return query === '' ? `/drills/${id}` : `/drills/${id}?back=${encodeURIComponent(query)}`
+  // `session` rides as its own top-level param rather than nested inside
+  // `back`: the drill detail page (Task 7) reads `?session=` directly to
+  // decide its own back-to-planner control, so it must not be buried inside
+  // an encoded, opaque `back` blob.
+  const { session, ...rest } = state
+  const query = browseStateToQuery({ ...rest, session: null })
+  const parts: string[] = []
+  if (query !== '') parts.push(`back=${encodeURIComponent(query)}`)
+  if (session !== null) parts.push(`session=${encodeURIComponent(session)}`)
+  return parts.length === 0 ? `/drills/${id}` : `/drills/${id}?${parts.join('&')}`
 }
 
 /**

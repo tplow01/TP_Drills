@@ -84,3 +84,22 @@ a { color: inherit; text-decoration: none; }
   .filter-sidebar { display: none; }
   .filter-trigger { display: block !important; }
 }
+
+/* Hidden on desktop, shown on phone — the Planner's "back to sessions" link
+   and similar phone-only affordances (spec 7.4: list-then-builder on phone). */
+.mobile-only { display: none; }
+
+/* Planner: two panes side by side on desktop; list-then-detail, one at a
+   time, on phone (spec 7.4). data-has-selection is set server-side from the
+   ?session= query param, so there is no client JS needed to pick the pane. */
+.planner-layout { display: flex; align-items: flex-start; }
+.planner-list-pane { width: 340px; flex: none; border-right: 1px solid var(--hairline); }
+.planner-detail-pane { flex: 1; min-width: 0; }
+
+@media (max-width: 780px) {
+  .mobile-only { display: block; }
+  .planner-layout { display: block; }
+  .planner-list-pane, .planner-detail-pane { width: 100%; }
+  .planner-layout[data-has-selection="true"] .planner-list-pane { display: none; }
+  .planner-layout[data-has-selection="false"] .planner-detail-pane { display: none; }
+}

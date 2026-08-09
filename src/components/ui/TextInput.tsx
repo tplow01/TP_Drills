@@ -11,6 +11,7 @@ const baseStyle: React.CSSProperties = {
   letterSpacing: '-0.005em',
   fontSize: 14,
   color: 'var(--ink)',
+  colorScheme: 'dark',
 }
 
 export function TextInput({
@@ -23,7 +24,7 @@ export function TextInput({
   value: string
   onChange: (value: string) => void
   placeholder?: string
-  type?: 'text' | 'number'
+  type?: 'text' | 'number' | 'date' | 'time'
   min?: number
 }) {
   return (

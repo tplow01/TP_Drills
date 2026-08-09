@@ -25,6 +25,9 @@
   /* Ink-on-cream: text sitting on a photo mat, where the ground is --ink. */
   --on-mat-muted: rgba(21, 21, 21, 0.35);
 
+  /* Reflect tag's tinted background: accent at low alpha, sitting on --ground. */
+  --accent-tint: rgba(241, 94, 34, 0.14);
+
   --radius: 10px;
   --radius-sm: 6px;
 }

@@ -48,6 +48,7 @@ export function PlannerSessionList({
   const [name, setName] = useState('')
   const [library, setLibrary] = useState<Library>('outfield')
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   const sorted = useMemo(
     () => sortSessionsForPlanner(sessions, drillCounts, today),
@@ -65,6 +66,7 @@ export function PlannerSessionList({
     const trimmed = name.trim()
     if (trimmed === '' || saving) return
     setSaving(true)
+    setError(null)
     try {
       const created = await createSession({
         team_id: null,
@@ -73,7 +75,9 @@ export function PlannerSessionList({
         date: null,
         start_time: null,
         location: null,
-        target_minutes: 60,
+        // 45 matches the database default (0004_sessions.sql) — the client
+        // never diverges from the schema's own fallback.
+        target_minutes: 45,
         age_band: null,
         session_notes: null,
       })
@@ -82,7 +86,8 @@ export function PlannerSessionList({
       setLibrary('outfield')
       router.push(`/planner?session=${created.id}`)
       router.refresh()
-    } finally {
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to create session')
       setSaving(false)
     }
   }
@@ -112,6 +117,9 @@ export function PlannerSessionList({
           <Field label="Library">
             <Segment value={library} onChange={setLibrary} />
           </Field>
+          {error && (
+            <div style={{ fontSize: 12, color: 'var(--accent)' }}>{error}</div>
+          )}
           <div style={{ display: 'flex', gap: 8 }}>
             <Button onClick={handleCreate} disabled={name.trim() === '' || saving} fullWidth>
               {saving ? 'Creating…' : 'Create'}
@@ -122,6 +130,7 @@ export function PlannerSessionList({
                 setCreating(false)
                 setName('')
                 setLibrary('outfield')
+                setError(null)
               }}
               disabled={saving}
             >

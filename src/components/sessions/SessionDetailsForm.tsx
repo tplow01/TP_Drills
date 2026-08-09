@@ -47,7 +47,14 @@ export function SessionDetailsForm({
   const router = useRouter()
   const [draft, setDraft] = useState<Draft>(() => draftFrom(session))
   const [saving, setSaving] = useState(false)
-  const [busy, setBusy] = useState(false)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
+  const [confirmingDelete, setConfirmingDelete] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
+
+  const [duplicating, setDuplicating] = useState(false)
+  const [duplicateError, setDuplicateError] = useState<string | null>(null)
 
   const original = draftFrom(session)
   const dirty =
@@ -64,6 +71,7 @@ export function SessionDetailsForm({
     const trimmedName = draft.name.trim()
     if (trimmedName === '' || saving) return
     setSaving(true)
+    setSaveError(null)
     try {
       const patch: Partial<SessionInput> = {
         name: trimmedName,
@@ -74,38 +82,46 @@ export function SessionDetailsForm({
       }
       await updateSession(session.id, patch)
       router.refresh()
+    } catch (e) {
+      setSaveError(e instanceof Error ? e.message : 'Failed to save changes')
     } finally {
       setSaving(false)
     }
   }
 
   async function handleDelete() {
-    const ok = window.confirm(
-      `Delete "${session.name}"? It has ${drillCount} drill${drillCount === 1 ? '' : 's'}. This can't be undone.`,
-    )
-    if (!ok) return
-    setBusy(true)
+    setDeleting(true)
+    setDeleteError(null)
     try {
       await deleteSession(session.id)
       router.push('/planner')
       router.refresh()
-    } finally {
-      setBusy(false)
+    } catch (e) {
+      setDeleteError(e instanceof Error ? e.message : 'Failed to delete session')
+      setDeleting(false)
     }
   }
 
   async function handleDuplicate() {
-    setBusy(true)
+    setDuplicating(true)
+    setDuplicateError(null)
     try {
       // No date, no reflection data — a duplicate is a starting point, not a
       // record of what happened (see lib/sessions.ts duplicateSession).
       const copy = await duplicateSession(session.id, `${session.name} (copy)`)
       router.push(`/planner?session=${copy.id}`)
       router.refresh()
-    } finally {
-      setBusy(false)
+    } catch (e) {
+      setDuplicateError(e instanceof Error ? e.message : 'Failed to duplicate session')
+      setDuplicating(false)
     }
   }
+
+  // Spec 9/11: the confirmation names the consequence, not a generic
+  // warning. Same message the old window.confirm carried, now in an
+  // in-app dialog matching DeleteDrillDialog's visual treatment (Phase 1)
+  // instead of an unstyled native dialog.
+  const deleteConsequence = `It has ${drillCount} drill${drillCount === 1 ? '' : 's'}. This can't be undone.`
 
   return (
     <div style={{ padding: '18px 18px 28px', maxWidth: 460 }}>
@@ -115,13 +131,17 @@ export function SessionDetailsForm({
 
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, marginBottom: 20 }}>
         <h2 style={{ fontSize: 18, flex: 1, minWidth: 0 }}>{session.name}</h2>
-        <Button variant="secondary" onClick={handleDuplicate} disabled={busy}>
-          Duplicate
+        <Button variant="secondary" onClick={handleDuplicate} disabled={duplicating}>
+          {duplicating ? 'Duplicating…' : 'Duplicate'}
         </Button>
-        <Button variant="secondary" onClick={handleDelete} disabled={busy}>
+        <Button variant="secondary" onClick={() => setConfirmingDelete(true)} disabled={deleting}>
           Delete
         </Button>
       </div>
+
+      {duplicateError && (
+        <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 14 }}>{duplicateError}</div>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Field label="Name">
@@ -150,11 +170,52 @@ export function SessionDetailsForm({
         </Field>
       </div>
 
+      {saveError && (
+        <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 12 }}>{saveError}</div>
+      )}
+
       {dirty && (
         <div style={{ marginTop: 18 }}>
           <Button onClick={handleSave} disabled={saving || draft.name.trim() === ''} fullWidth>
             {saving ? 'Saving…' : 'Save changes'}
           </Button>
+        </div>
+      )}
+
+      {confirmingDelete && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
+            display: 'grid', placeItems: 'center', padding: 20, zIndex: 30,
+          }}
+        >
+          <div
+            style={{
+              background: 'var(--card)', border: '1px solid var(--hairline)',
+              borderRadius: 'var(--radius)', padding: 20, maxWidth: 400,
+            }}
+          >
+            <h3 style={{ fontSize: 18 }}>Delete {session.name}?</h3>
+            <p style={{ fontSize: 13, color: 'var(--ink-70)', marginTop: 10 }}>{deleteConsequence}</p>
+            {deleteError && (
+              <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 12 }}>{deleteError}</div>
+            )}
+            <div style={{ display: 'flex', gap: 9, marginTop: 18 }}>
+              <Button onClick={handleDelete} disabled={deleting}>
+                {deleting ? 'Deleting…' : 'Delete'}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setConfirmingDelete(false)
+                  setDeleteError(null)
+                }}
+                disabled={deleting}
+              >
+                Keep it
+              </Button>
+            </div>
+          </div>
         </div>
       )}
     </div>

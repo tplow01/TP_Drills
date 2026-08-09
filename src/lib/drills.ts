@@ -1,32 +1,12 @@
 import { createBrowserClient } from './supabase/client'
-import { createServerClient } from './supabase/server'
 import { compressImage } from './image'
-import type { Drill, DrillInput, Library } from './types'
-
-/** Server-side. Every live drill in one library, newest first. */
-export async function listDrills(library: Library): Promise<Drill[]> {
-  const supabase = await createServerClient()
-  const { data, error } = await supabase
-    .from('drill')
-    .select('*')
-    .eq('library', library)
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
-
-  if (error) throw new Error(`Failed to list drills: ${error.message}`)
-  return data as Drill[]
-}
+import type { Drill, DrillInput } from './types'
 
 /**
- * Server-side. Does NOT filter deleted_at: a soft-deleted drill is still
- * reachable from a past session, and renders marked "removed from library".
+ * Browser-side writes, safe to import from client components. Server-side
+ * reads (listDrills, getDrill) live in `./drills-server` — see that file for
+ * why they are split out.
  */
-export async function getDrill(id: string): Promise<Drill | null> {
-  const supabase = await createServerClient()
-  const { data, error } = await supabase.from('drill').select('*').eq('id', id).maybeSingle()
-  if (error) throw new Error(`Failed to load drill: ${error.message}`)
-  return (data as Drill) ?? null
-}
 
 /** Browser-side. `library` is set here once and never updated again. */
 export async function createDrill(input: DrillInput): Promise<Drill> {

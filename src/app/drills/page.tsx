@@ -1,6 +1,6 @@
 import { DrillsBrowser } from '@/components/drills/DrillsBrowser'
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
-import { listDrills } from '@/lib/drills'
+import { listDrills } from '@/lib/drills-server'
 
 // Always fresh: the library changes whenever the coach adds a drill.
 export const dynamic = 'force-dynamic'

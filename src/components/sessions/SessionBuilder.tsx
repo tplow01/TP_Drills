@@ -4,28 +4,25 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
-  addDrillToSession,
   removeSessionDrill,
   reorderSessionDrills,
   setDurationOverride,
 } from '@/lib/sessions'
 import { effectiveDuration, timingSummary } from '@/lib/session-timing'
-import type { Drill, SessionDrillWithDrill, SessionWithDrills } from '@/lib/types'
+import type { SessionDrillWithDrill, SessionWithDrills } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/TextInput'
 
 /**
  * The right pane of the planner: the drills inside a session, in order,
- * with their timings (spec 7.4). `libraryDrills` is the session's own
- * library (outfield/goalkeeping), fetched server-side by the caller, so the
- * add-drill picker below never needs a client-side drill list read.
+ * with their timings (spec 7.4). Adding drills happens on the Drills screen
+ * (Task 8's session tray), not here — the empty state and "add drill"
+ * affordance below just route there with the session id on the URL.
  */
 export function SessionBuilder({
   session,
-  libraryDrills,
 }: {
   session: SessionWithDrills
-  libraryDrills: Drill[]
 }) {
   const router = useRouter()
   const drills = session.drills
@@ -42,11 +39,6 @@ export function SessionBuilder({
   // a router.refresh) on every keystroke. Keyed by session_drill id, cleared
   // once the value is committed on blur.
   const [durationDrafts, setDurationDrafts] = useState<Record<string, string>>({})
-
-  const [adding, setAdding] = useState(false)
-  const [search, setSearch] = useState('')
-  const [addBusyId, setAddBusyId] = useState<string | null>(null)
-  const [addError, setAddError] = useState<string | null>(null)
 
   async function move(index: number, direction: -1 | 1) {
     const target = index + direction
@@ -87,25 +79,52 @@ export function SessionBuilder({
     if (raw === undefined) return
     setRowError(null)
     const trimmed = raw.trim()
-    // Blank clears the override, reverting to the drill's own default —
-    // never a value that mutates duration_mins itself (spec 7.4).
-    const mins = trimmed === '' ? null : Math.max(0, Math.round(Number(trimmed)) || 0)
-    if (mins === effectiveDuration(item)) {
+
+    const clearDraft = () =>
       setDurationDrafts((d) => {
         const { [item.id]: _omit, ...rest } = d
         void _omit
         return rest
       })
+
+    // Blank clears the override, reverting to the drill's own default —
+    // never a value that mutates duration_mins itself (spec 7.4).
+    if (trimmed === '') {
+      if (effectiveDuration(item) === item.drill.duration_mins) {
+        clearDraft()
+        return
+      }
+      setBusyId(item.id)
+      try {
+        await setDurationOverride(item.id, null)
+        clearDraft()
+        router.refresh()
+      } catch (e) {
+        setRowError(e instanceof Error ? e.message : 'Failed to update duration')
+      } finally {
+        setBusyId(null)
+      }
+      return
+    }
+
+    // Garbage or non-positive input (spec: duration_override_positive check
+    // requires > 0) must not silently write 0 or clear the override — leave
+    // the previous value in place and say why.
+    const parsed = Number(trimmed)
+    if (!Number.isFinite(parsed) || !Number.isInteger(Math.round(parsed)) || Math.round(parsed) <= 0) {
+      setRowError('Enter a whole number of minutes greater than 0.')
+      return
+    }
+    const mins = Math.round(parsed)
+
+    if (mins === effectiveDuration(item)) {
+      clearDraft()
       return
     }
     setBusyId(item.id)
     try {
       await setDurationOverride(item.id, mins)
-      setDurationDrafts((d) => {
-        const { [item.id]: _omit, ...rest } = d
-        void _omit
-        return rest
-      })
+      clearDraft()
       router.refresh()
     } catch (e) {
       setRowError(e instanceof Error ? e.message : 'Failed to update duration')
@@ -113,26 +132,6 @@ export function SessionBuilder({
       setBusyId(null)
     }
   }
-
-  async function handleAdd(drillId: string) {
-    setAddError(null)
-    setAddBusyId(drillId)
-    try {
-      await addDrillToSession(session.id, drillId)
-      router.refresh()
-    } catch (e) {
-      setAddError(e instanceof Error ? e.message : 'Failed to add drill')
-    } finally {
-      setAddBusyId(null)
-    }
-  }
-
-  const filteredLibrary = useMemo(() => {
-    const q = search.trim().toLowerCase()
-    const available = libraryDrills.filter((d) => d.deleted_at === null)
-    if (q === '') return available
-    return available.filter((d) => d.name.toLowerCase().includes(q))
-  }, [libraryDrills, search])
 
   return (
     <div style={{ padding: '18px 18px 28px' }}>
@@ -178,7 +177,7 @@ export function SessionBuilder({
           <p className="bd" style={{ fontSize: 13, color: 'var(--ink-45)', marginBottom: 12 }}>
             No drills in this session yet.
           </p>
-          <Button variant="secondary" onClick={() => setAdding(true)}>
+          <Button variant="secondary" href={`/drills?session=${session.id}`}>
             Add from the library
           </Button>
         </div>
@@ -263,70 +262,8 @@ export function SessionBuilder({
         </div>
       )}
 
-      {!adding && drills.length > 0 && (
-        <Button variant="secondary" onClick={() => setAdding(true)}>+ Add drill</Button>
-      )}
-
-      {adding && (
-        <div
-          style={{
-            border: '1px solid var(--hairline)',
-            borderRadius: 'var(--radius)',
-            padding: 14,
-            marginTop: 12,
-          }}
-        >
-          <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
-            <div style={{ flex: 1 }}>
-              <TextInput value={search} onChange={setSearch} placeholder="Search the library" />
-            </div>
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setAdding(false)
-                setSearch('')
-                setAddError(null)
-              }}
-            >
-              Close
-            </Button>
-          </div>
-
-          {addError && (
-            <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 10 }}>{addError}</div>
-          )}
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 320, overflowY: 'auto' }}>
-            {filteredLibrary.length === 0 && (
-              <p className="bd" style={{ fontSize: 12, color: 'var(--ink-45)' }}>
-                No matching drills. <Link href="/drills" style={{ color: 'var(--accent)' }}>Browse the library</Link>.
-              </p>
-            )}
-            {filteredLibrary.map((drill) => (
-              <div
-                key={drill.id}
-                style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'var(--chip-bg)',
-                }}
-              >
-                <span style={{ fontSize: 13 }}>
-                  {drill.name}
-                  {drill.duration_mins !== null && (
-                    <span style={{ color: 'var(--ink-45)', fontSize: 11 }}> · {drill.duration_mins} min</span>
-                  )}
-                </span>
-                <Button
-                  variant="secondary"
-                  onClick={() => handleAdd(drill.id)}
-                  disabled={addBusyId === drill.id}
-                >
-                  {addBusyId === drill.id ? 'Adding…' : 'Add'}
-                </Button>
-              </div>
-            ))}
-          </div>
-        </div>
+      {drills.length > 0 && (
+        <Button variant="secondary" href={`/drills?session=${session.id}`}>+ Add drill</Button>
       )}
 
       {confirmRemoveId && (

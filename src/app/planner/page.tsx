@@ -3,7 +3,6 @@ import { PlannerSessionList } from '@/components/sessions/PlannerSessionList'
 import { SessionDetailsForm } from '@/components/sessions/SessionDetailsForm'
 import { SessionBuilder } from '@/components/sessions/SessionBuilder'
 import { drillCountsBySession, getSession, listSessions } from '@/lib/sessions-server'
-import { listDrills } from '@/lib/drills-server'
 
 // Always fresh: creating, editing or deleting a session must show up
 // immediately, and status is derived from today's date on every load.
@@ -23,7 +22,6 @@ export default async function PlannerPage({
   // getSession (not the plain listSessions row) carries the joined drills
   // the builder needs, ordered by position.
   const selected = params.session ? await getSession(params.session) : null
-  const libraryDrills = selected ? await listDrills(selected.library) : []
 
   return (
     <main>
@@ -51,7 +49,6 @@ export default async function PlannerPage({
               <SessionBuilder
                 key={`${selected.id}-builder`}
                 session={selected}
-                libraryDrills={libraryDrills}
               />
             </>
           ) : (

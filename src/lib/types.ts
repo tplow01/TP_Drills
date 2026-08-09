@@ -43,3 +43,60 @@ export type DrillInput = Omit<
   Drill,
   'id' | 'deleted_at' | 'created_at' | 'updated_at'
 >
+
+export interface Team {
+  id: string
+  name: string
+  library: Library
+  age_band: AgeBand | null
+  byga_url: string | null
+  created_at: string
+}
+
+export interface Session {
+  id: string
+  team_id: string | null
+  name: string
+  library: Library
+  date: string | null           // 'YYYY-MM-DD'
+  start_time: string | null     // 'HH:MM:SS'
+  location: string | null
+  target_minutes: number
+  age_band: AgeBand | null
+  session_notes: string | null
+  reflected_at: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type SessionInput = Omit<
+  Session,
+  'id' | 'created_at' | 'updated_at' | 'reflected_at'
+>
+
+export interface SessionDrill {
+  id: string
+  session_id: string
+  drill_id: string
+  position: number
+  duration_override: number | null
+  rating: number | null
+  note: string | null
+}
+
+export type SessionDrillInput = Omit<SessionDrill, 'id'>
+
+/** A session_drill joined to the drill it points at. */
+export interface SessionDrillWithDrill extends SessionDrill {
+  drill: Drill
+}
+
+export interface SessionWithDrills extends Session {
+  drills: SessionDrillWithDrill[]
+}
+
+export interface DrillStats {
+  drill_id: string
+  times_used: number
+  avg_rating: number | null
+}

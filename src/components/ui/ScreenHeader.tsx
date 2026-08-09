@@ -34,7 +34,7 @@ export function ScreenHeader({
             display: 'inline-flex',
             alignItems: 'center',
             gap: 6,
-            background: 'rgba(243,240,234,0.07)',
+            background: 'var(--chip-bg)',
             padding: '7px 12px 7px 10px',
             borderRadius: 8,
             fontWeight: 600,

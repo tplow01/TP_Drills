@@ -2,7 +2,7 @@
 
 const baseStyle: React.CSSProperties = {
   width: '100%',
-  background: 'rgba(243,240,234,0.06)',
+  background: 'var(--field-bg)',
   border: '1px solid var(--hairline)',
   borderRadius: 'var(--radius-sm)',
   padding: '10px 12px',

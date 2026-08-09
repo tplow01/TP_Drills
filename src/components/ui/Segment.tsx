@@ -17,7 +17,7 @@ export function Segment({
         display: 'inline-flex',
         borderRadius: 999,
         overflow: 'hidden',
-        background: 'rgba(243,240,234,0.08)',
+        background: 'var(--track-bg)',
       }}
     >
       {options.map((option) => {

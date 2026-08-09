@@ -78,7 +78,25 @@ export async function removeSessionDrill(sessionDrillId: string): Promise<void> 
  */
 export async function reorderSessionDrills(sessionId: string, orderedIds: string[]): Promise<void> {
   const supabase = createBrowserClient()
-  const rows = orderedIds.map((id, position) => ({ id, session_id: sessionId, position }))
+
+  // Postgres validates NOT NULL columns while building the proposed insert
+  // tuple, before conflict detection runs — an upsert payload missing
+  // drill_id (not null) fails even though every row already exists. Fetch
+  // the full rows first so the upsert carries every column, preserving
+  // duration_override/rating/note instead of nulling them out.
+  const { data: existing, error: fetchError } = await supabase
+    .from('session_drill')
+    .select('*')
+    .eq('session_id', sessionId)
+  if (fetchError) throw new Error(`Failed to reorder session drills: ${fetchError.message}`)
+
+  const byId = new Map((existing as SessionDrill[]).map((row) => [row.id, row]))
+  const rows = orderedIds.map((id, position) => {
+    const row = byId.get(id)
+    if (!row) throw new Error(`Failed to reorder session drills: unknown session_drill id ${id}`)
+    return { ...row, position }
+  })
+
   const { error } = await supabase.from('session_drill').upsert(rows, { onConflict: 'id' })
   if (error) throw new Error(`Failed to reorder session drills: ${error.message}`)
 }
@@ -105,10 +123,15 @@ export async function saveReflection(
 ): Promise<void> {
   const supabase = createBrowserClient()
 
-  const rows = entries.map((entry) => ({ id: entry.sessionDrillId, rating: entry.rating, note: entry.note }))
-  if (rows.length > 0) {
-    const { error: drillsError } = await supabase.from('session_drill').upsert(rows, { onConflict: 'id' })
-    if (drillsError) throw new Error(`Failed to save reflection: ${drillsError.message}`)
+  // Only rating/note change here — no position constraint is involved, so
+  // (unlike reorderSessionDrills) plain per-row updates are safe and don't
+  // need every NOT NULL column supplied.
+  for (const entry of entries) {
+    const { error: drillError } = await supabase
+      .from('session_drill')
+      .update({ rating: entry.rating, note: entry.note })
+      .eq('id', entry.sessionDrillId)
+    if (drillError) throw new Error(`Failed to save reflection: ${drillError.message}`)
   }
 
   const { error: sessionError } = await supabase

@@ -1,0 +1,22 @@
+-- Remove the anon DELETE capability on `drill`.
+--
+-- Spec 9: "Soft delete only. Drills are never hard-deleted." The app has
+-- exactly one delete path -- softDeleteDrill() in src/lib/drills.ts -- and it
+-- is an UPDATE setting `deleted_at`. Nothing in the codebase issues a DELETE
+-- against this table, so dropping the policy costs the app nothing.
+--
+-- What it buys: spec 12 accepted that the anon key ships in the client bundle
+-- and that the URL is the only thing keeping strangers out. That is a public
+-- READ risk, which was signed off. It is not a licence for anyone holding the
+-- scraped key to destroy the library outright, which is what a DELETE policy
+-- grants -- and unlike a soft delete, a hard delete is unrecoverable and takes
+-- the history that past sessions resolve against with it. The strongest data
+-- invariant in the schema should not rest solely on client code.
+--
+-- INSERT, SELECT and UPDATE from 0002_drill_rls.sql are deliberately left wide
+-- open: they are what the no-auth posture actually requires.
+--
+-- The storage.objects policies in 0001_drills.sql, including the delete one,
+-- are also left alone: image replacement needs them.
+
+drop policy if exists "public delete drills" on drill;

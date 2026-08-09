@@ -130,7 +130,9 @@ export function DrillsBrowser({
               fontSize: 12, fontWeight: 600, color: 'var(--accent)',
             }}
           >
-            {drafts.length} draft{drafts.length > 1 ? 's' : ''} need finishing before they can go in a session
+            {drafts.length === 1
+              ? '1 draft needs finishing before it can go in a session'
+              : `${drafts.length} drafts need finishing before they can go in a session`}
           </div>
         )}
 
@@ -156,7 +158,9 @@ export function DrillsBrowser({
             {panel}
             <div style={{ marginTop: 6 }}>
               <Button fullWidth onClick={() => setSheetOpen(false)}>
-                Show {results.length} drills
+                {results.length === 0
+                  ? 'No matches'
+                  : `Show ${results.length} ${results.length === 1 ? 'drill' : 'drills'}`}
               </Button>
             </div>
           </div>

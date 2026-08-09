@@ -59,3 +59,9 @@ body {
 
 button { font: inherit; color: inherit; cursor: pointer; }
 a { color: inherit; text-decoration: none; }
+
+/* Filters live in a sidebar on desktop and a bottom sheet on phone (spec 7.1). */
+@media (max-width: 780px) {
+  .filter-sidebar { display: none; }
+  .filter-trigger { display: block !important; }
+}

@@ -1,10 +1,21 @@
-export default function DrillsPage() {
+import { DrillsBrowser } from '@/components/drills/DrillsBrowser'
+import { ScreenHeader } from '@/components/ui/ScreenHeader'
+import { listDrills } from '@/lib/drills'
+
+// Always fresh: the library changes whenever the coach adds a drill.
+export const dynamic = 'force-dynamic'
+
+export default async function DrillsPage() {
+  const [outfield, goalkeeping] = await Promise.all([
+    listDrills('outfield'),
+    listDrills('goalkeeping'),
+  ])
+
   return (
-    <main style={{ padding: 24 }}>
-      <h1 style={{ fontSize: 34 }}>Drills</h1>
-      <p className="bd" style={{ color: 'var(--ink-45)', marginTop: 10 }}>
-        Library coming in Task 7.
-      </p>
+    <main>
+      {/* No backHref: Drills is the Phase 1 front door. */}
+      <ScreenHeader title="Drills" />
+      <DrillsBrowser outfield={outfield} goalkeeping={goalkeeping} />
     </main>
   )
 }

@@ -4,3 +4,4 @@ node_modules/
 .env*.local
 supabase.md
 .DS_Store
+tsconfig.tsbuildinfo

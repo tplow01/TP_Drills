@@ -39,11 +39,3 @@ export function typesFor(library: Library): readonly DrillType[] {
 export function typeLabel(type: DrillType): string {
   return TYPE_LABELS[type]
 }
-
-export function ageBandLabel(band: AgeBand): string {
-  return band
-}
-
-export function libraryLabel(library: Library): string {
-  return library === 'outfield' ? 'Outfield' : 'Goalkeeping'
-}

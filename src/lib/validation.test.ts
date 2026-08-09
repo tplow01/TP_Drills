@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { DrillInput } from './types'
-import { fieldLabel, isComplete, missingFields } from './validation'
+import { fieldLabel, invalidFields, invalidLabel, isComplete, missingFields } from './validation'
 
 function input(over: Partial<DrillInput> = {}): DrillInput {
   return {
@@ -56,12 +56,16 @@ describe('missingFields', () => {
     expect(got).toContain('players_min')
   })
 
-  it('rejects a maximum below the minimum', () => {
-    expect(missingFields(input({ players_min: 12, players_max: 8 }))).toContain('players_max')
-  })
-
   it('accepts a null maximum as no upper limit', () => {
     expect(missingFields(input({ players_max: null }))).toEqual([])
+  })
+
+  it('does not call a present-but-impossible number missing', () => {
+    // "Missing" and "invalid" are different states, and the coach is told
+    // which. A zero duration is supplied, just unusable.
+    const got = missingFields(input({ duration_mins: 0, players_min: 0 }))
+    expect(got).not.toContain('duration_mins')
+    expect(got).not.toContain('players_min')
   })
 
   it('reports the same gaps whether or not the drill is flagged draft', () => {
@@ -72,9 +76,74 @@ describe('missingFields', () => {
   })
 })
 
+describe('invalidFields', () => {
+  // These mirror the positive_numbers and players_range_sane CHECK
+  // constraints, which apply to every row including drafts. Anything this
+  // function misses reaches the coach as a raw Postgres error.
+  it('finds nothing wrong with a complete drill', () => {
+    expect(invalidFields(input())).toEqual([])
+  })
+
+  it('rejects a zero or negative duration', () => {
+    expect(invalidFields(input({ duration_mins: 0 }))).toContain('duration_mins')
+    expect(invalidFields(input({ duration_mins: -5 }))).toContain('duration_mins')
+  })
+
+  it('rejects a zero or negative minimum players', () => {
+    expect(invalidFields(input({ players_min: 0, players_max: null }))).toContain('players_min')
+    expect(invalidFields(input({ players_min: -2, players_max: null }))).toContain('players_min')
+  })
+
+  it('rejects negative equipment counts', () => {
+    expect(invalidFields(input({ goals_needed: -1 }))).toContain('goals_needed')
+    expect(invalidFields(input({ cones_needed: -1 }))).toContain('cones_needed')
+  })
+
+  it('accepts zero equipment counts', () => {
+    expect(invalidFields(input({ goals_needed: 0, cones_needed: 0 }))).toEqual([])
+  })
+
+  it('rejects a maximum below the minimum', () => {
+    expect(invalidFields(input({ players_min: 12, players_max: 8 }))).toContain('players_max')
+  })
+
+  it('accepts a null maximum as no upper limit', () => {
+    expect(invalidFields(input({ players_max: null }))).toEqual([])
+  })
+
+  it('treats a null duration or minimum as missing, not invalid', () => {
+    expect(invalidFields(input({ duration_mins: null, players_min: null }))).toEqual([])
+  })
+
+  it('applies to drafts exactly as to finished drills', () => {
+    // Unlike a missing field, an invalid one cannot be deferred: the CHECK
+    // constraint fires whatever is_draft says.
+    const a = invalidFields(input({ duration_mins: 0, is_draft: true }))
+    const b = invalidFields(input({ duration_mins: 0, is_draft: false }))
+    expect(a).toEqual(b)
+    expect(a).toEqual(['duration_mins'])
+  })
+})
+
+describe('invalidLabel', () => {
+  it('names the problem for every invalid field', () => {
+    const all = invalidFields(input({
+      duration_mins: 0, players_min: 0, players_max: -1,
+      goals_needed: -1, cones_needed: -1,
+    }))
+    expect(all).toHaveLength(5)
+    for (const f of all) expect(invalidLabel(f).length).toBeGreaterThan(0)
+    expect(invalidLabel('duration_mins')).toBe('Duration must be at least 1 minute')
+  })
+})
+
 describe('isComplete', () => {
   it('is false whenever anything is missing', () => {
     expect(isComplete(input({ coaching_points: [] }))).toBe(false)
+  })
+
+  it('is false whenever anything is invalid', () => {
+    expect(isComplete(input({ duration_mins: 0 }))).toBe(false)
   })
 })
 

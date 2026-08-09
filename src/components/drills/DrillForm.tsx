@@ -5,7 +5,7 @@ import { useState } from 'react'
 import { createDrill, updateDrill } from '@/lib/drills'
 import { AGE_BANDS, typeLabel, typesFor } from '@/lib/taxonomy'
 import type { Drill, DrillInput, DrillType, Library } from '@/lib/types'
-import { fieldLabel, missingFields } from '@/lib/validation'
+import { fieldLabel, invalidFields, invalidLabel, missingFields } from '@/lib/validation'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { TextInput, TextArea } from '@/components/ui/TextInput'
@@ -13,7 +13,7 @@ import { PhotoField } from './PhotoField'
 
 const selectStyle: React.CSSProperties = {
   width: '100%',
-  background: 'rgba(243,240,234,0.06)',
+  background: 'var(--field-bg)',
   border: '1px solid var(--hairline)',
   borderRadius: 'var(--radius-sm)',
   padding: '10px 12px',
@@ -21,6 +21,16 @@ const selectStyle: React.CSSProperties = {
   fontWeight: 500,
   fontSize: 14,
   color: 'var(--ink)',
+}
+
+/**
+ * Equipment counts are never negative and never blank — the `min={0}` on a
+ * number input is only advisory, so the floor is applied here too.
+ */
+function count(raw: string): number {
+  const n = Number(raw)
+  if (!Number.isFinite(n)) return 0
+  return Math.max(0, Math.floor(n))
 }
 
 function emptyInput(library: Library): DrillInput {
@@ -57,8 +67,13 @@ export function DrillForm({
     setDraft((d) => ({ ...d, [key]: value }))
 
   const missing = missingFields(draft)
+  // A missing field is deferrable — it just keeps the drill a draft. An
+  // invalid one is not: the database's positive_numbers / players_range_sane
+  // CHECKs apply to drafts too, so saving must be blocked until it is fixed.
+  const invalid = invalidFields(draft)
 
   async function save() {
+    if (invalid.length > 0) return
     setSaving(true)
     setError(null)
     try {
@@ -229,7 +244,7 @@ export function DrillForm({
                 type="number"
                 min={0}
                 value={String(draft.goals_needed)}
-                onChange={(value) => set('goals_needed', Number(value || 0))}
+                onChange={(value) => set('goals_needed', count(value))}
               />
             </Field>
             <Field label="Cones">
@@ -237,7 +252,7 @@ export function DrillForm({
                 type="number"
                 min={0}
                 value={String(draft.cones_needed)}
-                onChange={(value) => set('cones_needed', Number(value || 0))}
+                onChange={(value) => set('cones_needed', count(value))}
               />
             </Field>
             <Field label="Bibs">
@@ -288,8 +303,19 @@ export function DrillForm({
         </>
       )}
 
+      {invalid.length > 0 && (
+        <div style={{ border: '1px solid var(--accent-border)', borderRadius: 'var(--radius)', padding: 12, marginBottom: 15 }}>
+          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)' }}>
+            Cannot save — not even as a draft. Fix this first:
+          </div>
+          <ul style={{ margin: '8px 0 0', paddingLeft: 18, fontSize: 12, color: 'var(--ink-70)' }}>
+            {invalid.map((f) => <li key={f}>{invalidLabel(f)}</li>)}
+          </ul>
+        </div>
+      )}
+
       {missing.length > 0 && (
-        <div style={{ border: '1px solid rgba(241,94,34,0.4)', borderRadius: 'var(--radius)', padding: 12, marginBottom: 15 }}>
+        <div style={{ border: '1px solid var(--accent-border)', borderRadius: 'var(--radius)', padding: 12, marginBottom: 15 }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--accent)' }}>
             Saves as a draft. Still needed before it can go in a session:
           </div>
@@ -301,7 +327,7 @@ export function DrillForm({
 
       {error && <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 12 }}>{error}</div>}
 
-      <Button onClick={save} disabled={saving || draft.name.trim() === ''}>
+      <Button onClick={save} disabled={saving || invalid.length > 0 || draft.name.trim() === ''}>
         {saving ? 'Saving…' : missing.length > 0 ? 'Save draft' : 'Save drill'}
       </Button>
     </div>

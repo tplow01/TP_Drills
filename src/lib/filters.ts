@@ -96,18 +96,55 @@ export function activeFilterCount(filter: DrillFilter): number {
   return n
 }
 
-export function describeFilter(filter: DrillFilter): string {
-  const parts: string[] = []
-  if (filter.types.length > 0) parts.push(filter.types.map(typeLabel).join(', '))
-  if (filter.ageBands.length > 0) parts.push(filter.ageBands.join(', '))
-  if (filter.durations.length > 0) {
-    parts.push(filter.durations.map((d) => DURATION_LABELS[d]).join(', '))
-  }
-  if (filter.playersToday !== null) parts.push(`fits ${filter.playersToday}`)
-  return parts.length === 0 ? 'No filters' : parts.join(' · ')
+export type FilterAxis = 'types' | 'ageBands' | 'durations' | 'playersToday'
+
+/**
+ * One removable filter value. Spec 7.1 requires active filters to be
+ * "individually clearable" from the summary line, so the summary needs the
+ * active filters as data rather than as one flat sentence.
+ *
+ * A multi-select axis contributes one chip per selected value: unpicking
+ * "Passing" must not also unpick "Shooting". `playersToday` is single-valued
+ * and contributes at most one chip.
+ */
+export interface ActiveFilterChip {
+  axis: FilterAxis
+  /** The value to remove from its axis. `null` for the single-valued axis. */
+  value: DrillType | AgeBand | DurationBucket | null
+  label: string
 }
 
-export type FilterAxis = 'types' | 'ageBands' | 'durations' | 'playersToday'
+/** Search is excluded: it has its own visible field with its own clear. */
+export function activeFilterChips(filter: DrillFilter): ActiveFilterChip[] {
+  const chips: ActiveFilterChip[] = []
+  for (const type of filter.types) {
+    chips.push({ axis: 'types', value: type, label: typeLabel(type) })
+  }
+  for (const band of filter.ageBands) {
+    chips.push({ axis: 'ageBands', value: band, label: band })
+  }
+  for (const bucket of filter.durations) {
+    chips.push({ axis: 'durations', value: bucket, label: DURATION_LABELS[bucket] })
+  }
+  if (filter.playersToday !== null) {
+    chips.push({ axis: 'playersToday', value: null, label: `fits ${filter.playersToday}` })
+  }
+  return chips
+}
+
+/** Returns the filter with just this one chip removed. Never mutates. */
+export function removeFilterChip(filter: DrillFilter, chip: ActiveFilterChip): DrillFilter {
+  switch (chip.axis) {
+    case 'types':
+      return { ...filter, types: filter.types.filter((t) => t !== chip.value) }
+    case 'ageBands':
+      return { ...filter, ageBands: filter.ageBands.filter((b) => b !== chip.value) }
+    case 'durations':
+      return { ...filter, durations: filter.durations.filter((d) => d !== chip.value) }
+    case 'playersToday':
+      return { ...filter, playersToday: null }
+  }
+}
 
 /**
  * Spec 11: an empty result offers to clear the most restrictive filter, not

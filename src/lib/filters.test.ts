@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import type { Drill } from './types'
+import type { DrillFilter } from './filters'
 import {
-  EMPTY_FILTER, activeFilterCount, describeFilter, filterDrills,
-  matchesDuration, matchesPlayers, matchesSearch, mostRestrictiveAxis, sortDrills,
+  EMPTY_FILTER, activeFilterChips, activeFilterCount, filterDrills,
+  matchesDuration, matchesPlayers, matchesSearch, mostRestrictiveAxis,
+  removeFilterChip, sortDrills,
 } from './filters'
 
 function drill(over: Partial<Drill> = {}): Drill {
@@ -154,7 +156,80 @@ describe('sortDrills', () => {
   })
 })
 
-describe('activeFilterCount and describeFilter', () => {
+describe('activeFilterChips', () => {
+  const busy: DrillFilter = {
+    ...EMPTY_FILTER,
+    types: ['passing', 'possession_rondo'],
+    ageBands: ['U9-U11'],
+    durations: ['10to20'],
+    playersToday: 14,
+  }
+
+  it('gives one labelled chip per selected value, in axis order', () => {
+    expect(activeFilterChips(busy)).toEqual([
+      { axis: 'types', value: 'passing', label: 'Passing' },
+      { axis: 'types', value: 'possession_rondo', label: 'Possession / Rondo' },
+      { axis: 'ageBands', value: 'U9-U11', label: 'U9-U11' },
+      { axis: 'durations', value: '10to20', label: '10–20 min' },
+      { axis: 'playersToday', value: null, label: 'fits 14' },
+    ])
+  })
+
+  it('has no chips for an empty filter', () => {
+    expect(activeFilterChips(EMPTY_FILTER)).toEqual([])
+  })
+
+  it('does not treat search as a chip', () => {
+    // Search has its own visible field with its own clear.
+    expect(activeFilterChips({ ...EMPTY_FILTER, search: 'rondo' })).toEqual([])
+  })
+})
+
+describe('removeFilterChip', () => {
+  const busy: DrillFilter = {
+    ...EMPTY_FILTER,
+    types: ['passing', 'possession_rondo'],
+    ageBands: ['U9-U11'],
+    durations: ['10to20'],
+    playersToday: 14,
+    search: 'rondo',
+  }
+
+  it('removes one value from a multi-select axis and leaves its siblings', () => {
+    const [firstType] = activeFilterChips(busy)
+    const next = removeFilterChip(busy, firstType)
+    expect(next.types).toEqual(['possession_rondo'])
+    expect(next.ageBands).toEqual(['U9-U11'])
+    expect(next.durations).toEqual(['10to20'])
+    expect(next.playersToday).toBe(14)
+  })
+
+  it('clears the single-valued players axis', () => {
+    const chip = activeFilterChips(busy).find((c) => c.axis === 'playersToday')!
+    expect(removeFilterChip(busy, chip).playersToday).toBeNull()
+  })
+
+  it('never touches the search term', () => {
+    for (const chip of activeFilterChips(busy)) {
+      expect(removeFilterChip(busy, chip).search).toBe('rondo')
+    }
+  })
+
+  it('does not mutate the filter it is given', () => {
+    const before = JSON.stringify(busy)
+    for (const chip of activeFilterChips(busy)) removeFilterChip(busy, chip)
+    expect(JSON.stringify(busy)).toBe(before)
+  })
+
+  it('removing every chip leaves nothing active', () => {
+    let filter: typeof busy | ReturnType<typeof removeFilterChip> = busy
+    for (const chip of activeFilterChips(busy)) filter = removeFilterChip(filter, chip)
+    expect(activeFilterChips(filter)).toEqual([])
+    expect(activeFilterCount(filter)).toBe(0)
+  })
+})
+
+describe('activeFilterCount', () => {
   it('counts each populated axis once', () => {
     expect(activeFilterCount(EMPTY_FILTER)).toBe(0)
     expect(activeFilterCount({
@@ -170,19 +245,6 @@ describe('activeFilterCount and describeFilter', () => {
     expect(activeFilterCount({ ...EMPTY_FILTER, search: 'rondo' })).toBe(0)
   })
 
-  it('describes the active filters as one readable line', () => {
-    expect(describeFilter({
-      ...EMPTY_FILTER,
-      types: ['passing', 'possession_rondo'],
-      ageBands: ['U9-U11'],
-      durations: ['10to20'],
-      playersToday: 14,
-    })).toBe('Passing, Possession / Rondo · U9-U11 · 10–20 min · fits 14')
-  })
-
-  it('describes an empty filter as no filters', () => {
-    expect(describeFilter(EMPTY_FILTER)).toBe('No filters')
-  })
 })
 
 describe('mostRestrictiveAxis', () => {

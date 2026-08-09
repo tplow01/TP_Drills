@@ -65,7 +65,6 @@ create table session_drill (
 );
 
 create index session_dated_idx on session (date) where date is not null;
-create index session_drill_session_idx on session_drill (session_id, position);
 create index session_drill_drill_idx on session_drill (drill_id);
 
 create trigger session_updated_at
@@ -81,7 +80,7 @@ create view drill_stats with (security_invoker = true) as
     count(sd.id) filter (
       where s.date is not null and s.date < current_date
     )::int as times_used,
-    avg(sd.rating) filter (where sd.rating is not null) as avg_rating
+    avg(sd.rating) as avg_rating
   from drill d
   left join session_drill sd on sd.drill_id = d.id
   left join session s on s.id = sd.session_id

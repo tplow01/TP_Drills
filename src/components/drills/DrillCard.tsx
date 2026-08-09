@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { drillHref } from '@/lib/drill-query'
+import type { DrillBrowseState } from '@/lib/drill-query'
 import { typeLabel } from '@/lib/taxonomy'
 import type { Drill } from '@/lib/types'
 
@@ -9,14 +11,22 @@ function playersLabel(drill: Drill): string {
     : `${drill.players_min}–${drill.players_max}`
 }
 
-export function DrillCard({ drill }: { drill: Drill }) {
+export function DrillCard({
+  drill,
+  browseState,
+}: {
+  drill: Drill
+  browseState: DrillBrowseState
+}) {
   return (
     <Link
-      href={`/drills/${drill.id}`}
+      // Carries the list's filter and sort, so Back on the detail screen
+      // returns to the list as it was left (spec 7.1).
+      href={drillHref(drill.id, browseState)}
       style={{
         display: 'block',
         background: 'var(--card)',
-        border: `1px solid ${drill.is_draft ? 'rgba(241,94,34,0.4)' : 'var(--hairline)'}`,
+        border: `1px solid ${drill.is_draft ? 'var(--accent-border)' : 'var(--hairline)'}`,
         borderRadius: 'var(--radius)',
         padding: 12,
       }}
@@ -48,7 +58,7 @@ export function DrillCard({ drill }: { drill: Drill }) {
               fontSize: 9,
               fontWeight: 600,
               letterSpacing: '0.09em',
-              color: 'rgba(21,21,21,0.35)',
+              color: 'var(--on-mat-muted)',
             }}
           >
             NO IMAGE

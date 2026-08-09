@@ -1,11 +1,13 @@
 'use client'
 
-import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useState } from 'react'
 import {
   EMPTY_FILTER, activeFilterCount, filterDrills, mostRestrictiveAxis, sortDrills,
 } from '@/lib/filters'
-import type { DrillFilter, SortDir, SortKey } from '@/lib/filters'
+import type { DrillFilter } from '@/lib/filters'
+import { browseStateToQuery, drillHref, parseBrowseState } from '@/lib/drill-query'
+import type { DrillBrowseState } from '@/lib/drill-query'
 import type { Drill, Library } from '@/lib/types'
 import { Segment } from '@/components/ui/Segment'
 import { Button } from '@/components/ui/Button'
@@ -28,26 +30,52 @@ export function DrillsBrowser({
   outfield: Drill[]
   goalkeeping: Drill[]
 }) {
-  // Spec 5.1: the segment never persists. Every arrival opens on Outfield.
-  const [library, setLibrary] = useState<Library>('outfield')
-  const [filter, setFilter] = useState<DrillFilter>(EMPTY_FILTER)
-  const [sortKey, setSortKey] = useState<SortKey>('duration')
-  const [sortDir, setSortDir] = useState<SortDir>('asc')
+  const params = useSearchParams()
+
+  /**
+   * Spec 7.1: filter and sort survive a trip into a drill and back. The URL
+   * is the store — the back button restores it for free, and a bare `/drills`
+   * parses to the default: Outfield, no filters (spec 5.1, the segment never
+   * persists across a fresh visit).
+   */
+  const [state, setState] = useState<DrillBrowseState>(() => parseBrowseState(params))
   const [sheetOpen, setSheetOpen] = useState(false)
 
+  const query = browseStateToQuery(state)
+
+  // Mirror state into the URL without a Next navigation: `router.replace` on
+  // a force-dynamic route would refetch the whole list on every keystroke.
+  // replaceState edits the current history entry rather than adding one, so
+  // pressing back from a drill lands on the list as it was left, not on a
+  // trail of half-typed searches. Leaving and returning remounts this
+  // component, and the initialiser above reads the state back out of the URL.
+  useEffect(() => {
+    const href = query === '' ? '/drills' : `/drills?${query}`
+    if (window.location.pathname + window.location.search === href) return
+    window.history.replaceState(null, '', href)
+  }, [query])
+
+  const { library, filter, sortKey, sortDir } = state
+  const setFilter = (next: DrillFilter) => setState((s) => ({ ...s, filter: next }))
+
   const all = library === 'outfield' ? outfield : goalkeeping
-  const drafts = useMemo(() => all.filter((d) => d.is_draft), [all])
+
+  // Drafts are pinned above the list, never mixed into it (spec 7.1, 11), so
+  // they are held out of the filtered set entirely rather than filtered.
+  const { drafts, finished } = useMemo(() => ({
+    drafts: all.filter((d) => d.is_draft && d.deleted_at === null),
+    finished: all.filter((d) => !d.is_draft),
+  }), [all])
 
   const results = useMemo(
-    () => sortDrills(filterDrills(all, filter), sortKey, sortDir),
-    [all, filter, sortKey, sortDir],
+    () => sortDrills(filterDrills(finished, filter), sortKey, sortDir),
+    [finished, filter, sortKey, sortDir],
   )
 
   function switchLibrary(next: Library) {
-    setLibrary(next)
     // Type chips and age bands are library-specific, so a carried-over filter
     // would silently exclude everything.
-    setFilter(EMPTY_FILTER)
+    setState((s) => ({ ...s, library: next, filter: EMPTY_FILTER }))
   }
 
   const panel = (
@@ -57,12 +85,12 @@ export function DrillsBrowser({
       onChange={setFilter}
       sortKey={sortKey}
       sortDir={sortDir}
-      onSortChange={(k, d) => { setSortKey(k); setSortDir(d) }}
+      onSortChange={(k, d) => setState((s) => ({ ...s, sortKey: k, sortDir: d }))}
     />
   )
 
   const emptyState =
-    all.length === 0 ? (
+    finished.length === 0 ? (
       <div style={{ padding: '32px 0', maxWidth: 420 }}>
         <h3 style={{ fontSize: 18 }}>Nothing here yet</h3>
         <p style={{ fontSize: 13, color: 'var(--ink-45)', marginTop: 10 }}>
@@ -75,7 +103,7 @@ export function DrillsBrowser({
         </p>
       </div>
     ) : (
-      <EmptyResults drills={all} filter={filter} onChange={setFilter} />
+      <EmptyResults drills={finished} filter={filter} onChange={setFilter} />
     )
 
   return (
@@ -91,9 +119,9 @@ export function DrillsBrowser({
       <div style={{ flex: 1, minWidth: 0, padding: '18px 18px 28px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <Segment value={library} onChange={switchLibrary} />
-          <Link href={`/drills/new?library=${library}&mode=quick`} style={{ marginLeft: 'auto' }}>
-            <Button>+ Quick add</Button>
-          </Link>
+          <span style={{ marginLeft: 'auto' }}>
+            <Button href={`/drills/new?library=${library}&mode=quick`}>+ Quick add</Button>
+          </span>
         </div>
 
         <div style={{ marginTop: 12 }}>
@@ -117,26 +145,39 @@ export function DrillsBrowser({
 
         <ActiveFilterSummary
           shown={results.length}
-          total={all.length}
+          total={finished.length}
           filter={filter}
+          onChange={setFilter}
           onClearAll={() => setFilter({ ...EMPTY_FILTER, search: filter.search })}
         />
 
+        {/* Pinned above the results and never inside them: a draft is work to
+            finish, not a search hit, so the count is of the whole library and
+            filters do not apply to it. */}
         {drafts.length > 0 && (
           <div
             style={{
-              border: '1px solid rgba(241,94,34,0.4)', borderRadius: 'var(--radius)',
+              border: '1px solid var(--accent-border)', borderRadius: 'var(--radius)',
               padding: '10px 12px', marginBottom: 12,
               fontSize: 12, fontWeight: 600, color: 'var(--accent)',
             }}
           >
-            {drafts.length === 1
-              ? '1 draft needs finishing before it can go in a session'
-              : `${drafts.length} drafts need finishing before they can go in a session`}
+            <div style={{ marginBottom: 8 }}>
+              {drafts.length === 1
+                ? '1 draft needs finishing before it can go in a session'
+                : `${drafts.length} drafts need finishing before they can go in a session`}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+              {drafts.map((d) => (
+                <Button key={d.id} variant="ghost" href={drillHref(d.id, state)}>
+                  {d.name} →
+                </Button>
+              ))}
+            </div>
           </div>
         )}
 
-        <DrillGrid drills={results} emptyState={emptyState} />
+        <DrillGrid drills={results} browseState={state} emptyState={emptyState} />
       </div>
 
       {sheetOpen && (

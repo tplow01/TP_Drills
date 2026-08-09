@@ -1,8 +1,8 @@
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { DeleteDrillDialog } from '@/components/drills/DeleteDrillDialog'
 import { Button } from '@/components/ui/Button'
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
+import { backToDrillsHref } from '@/lib/drill-query'
 import { countSessionsUsing, getDrill } from '@/lib/drills-server'
 import { typeLabel } from '@/lib/taxonomy'
 
@@ -19,34 +19,43 @@ function Block({ label, children }: { label: string; children: React.ReactNode }
 
 export default async function DrillDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>
+  searchParams: Promise<{ back?: string | string[] }>
 }) {
   const { id } = await params
+  const { back } = await searchParams
   const drill = await getDrill(id)
   if (!drill) notFound()
 
   const sessionCount = await countSessionsUsing(drill.id)
+  // The list's filter and sort came in on `back`; hand them straight back so
+  // leaving this screen restores the list as it was (spec 7.1).
+  const backHref = backToDrillsHref(back)
 
   return (
     <main>
       <ScreenHeader
         title={drill.name}
-        backHref="/drills"
+        backHref={backHref}
         backLabel="Drills"
         right={
           <div style={{ display: 'flex', gap: 8 }}>
-            <Link href={`/drills/${drill.id}/edit`}>
-              <Button variant="secondary">Edit</Button>
-            </Link>
-            <DeleteDrillDialog drillId={drill.id} drillName={drill.name} sessionCount={sessionCount} />
+            <Button variant="secondary" href={`/drills/${drill.id}/edit`}>Edit</Button>
+            <DeleteDrillDialog
+              drillId={drill.id}
+              drillName={drill.name}
+              sessionCount={sessionCount}
+              backHref={backHref}
+            />
           </div>
         }
       />
 
       <div style={{ padding: 18, maxWidth: 640 }}>
         {drill.deleted_at && (
-          <div style={{ border: '1px solid rgba(241,94,34,0.4)', borderRadius: 'var(--radius)', padding: 12, marginBottom: 18, fontSize: 12, fontWeight: 600, color: 'var(--accent)' }}>
+          <div style={{ border: '1px solid var(--accent-border)', borderRadius: 'var(--radius)', padding: 12, marginBottom: 18, fontSize: 12, fontWeight: 600, color: 'var(--accent)' }}>
             Removed from the library. Past sessions keep it.
           </div>
         )}

@@ -1,3 +1,4 @@
+import { Suspense } from 'react'
 import { DrillsBrowser } from '@/components/drills/DrillsBrowser'
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
 import { listDrills } from '@/lib/drills-server'
@@ -15,7 +16,11 @@ export default async function DrillsPage() {
     <main>
       {/* No backHref: Drills is the Phase 1 front door. */}
       <ScreenHeader title="Drills" />
-      <DrillsBrowser outfield={outfield} goalkeeping={goalkeeping} />
+      {/* Filter and sort state lives in the URL (spec 7.1), so the browser
+          reads useSearchParams and needs a Suspense boundary. */}
+      <Suspense>
+        <DrillsBrowser outfield={outfield} goalkeeping={goalkeeping} />
+      </Suspense>
     </main>
   )
 }

@@ -44,7 +44,7 @@ function Checkbox({
           height: 13,
           flex: 'none',
           borderRadius: 3,
-          border: `1.5px solid ${checked ? 'var(--accent)' : 'rgba(243,240,234,0.25)'}`,
+          border: `1.5px solid ${checked ? 'var(--accent)' : 'var(--checkbox-border)'}`,
           background: checked ? 'var(--accent)' : 'transparent',
         }}
       />
@@ -128,12 +128,17 @@ export function FilterPanel({
           min={1}
           placeholder="How many?"
           value={filter.playersToday === null ? '' : String(filter.playersToday)}
-          onChange={(value) =>
+          onChange={(value) => {
+            // Only a positive whole number is a player count. This matches
+            // what the URL codec will accept back, so state and URL cannot
+            // disagree after a reload — and "0 players" silently hiding the
+            // whole library is not a filter anyone meant to set.
+            const n = Number(value)
             onChange({
               ...filter,
-              playersToday: value === '' ? null : Number(value),
+              playersToday: Number.isInteger(n) && n > 0 ? n : null,
             })
-          }
+          }}
         />
       </Group>
 
@@ -146,8 +151,8 @@ export function FilterPanel({
           }}
           style={{
             width: '100%',
-            background: 'rgba(243,240,234,0.06)',
-            border: '1px solid rgba(243,240,234,0.12)',
+            background: 'var(--field-bg)',
+            border: '1px solid var(--control-border)',
             borderRadius: 6,
             padding: '8px 10px',
             color: 'var(--ink)',

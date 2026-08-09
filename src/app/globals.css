@@ -135,3 +135,102 @@ a { color: inherit; text-decoration: none; }
   /* Room for the docked tray so the last drill cards aren't hidden behind it. */
   .drills-content-with-tray { padding-bottom: 220px; }
 }
+
+/* Session view (Task 9): the pitchside artefact and the print sheet — one
+   component, one stylesheet with a print block (spec 4, 7.9). Substantially
+   larger type than planning screens, large touch targets, minimal chrome. */
+.session-view-body { padding: 8px 20px 60px; max-width: 720px; margin: 0 auto; }
+
+.session-view-print-header { padding: 10px 0 18px; }
+.session-view-meta { font-size: 15px; color: var(--ink-45); margin-top: 6px; }
+
+/* Hidden on screen, shown only in the print stylesheet below. */
+.print-only { display: none; }
+
+.session-view-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 18px; }
+
+.session-view-drill {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  padding: 18px;
+  border: 1.5px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--card);
+}
+
+/* The running-drill marker: the one place on this screen orange is earned
+   (spec 8 — orange is rationed). */
+.session-view-drill[data-current="true"] {
+  border-color: var(--accent);
+  background: var(--accent-tint);
+}
+
+.session-view-mark {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid var(--button-border);
+  background: none;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  color: var(--ink-45);
+}
+.session-view-drill[data-current="true"] .session-view-mark {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Cream photo mat, same treatment as DrillCard: contains the diagram rather
+   than cropping it. */
+.session-view-mat {
+  flex: none;
+  width: 96px;
+  height: 96px;
+  background: var(--ink);
+  border-radius: var(--radius-sm);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  padding: 8px;
+}
+.session-view-mat-img { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+.session-view-drill-body { flex: 1; min-width: 0; }
+.session-view-removed { font-size: 13px; font-weight: 600; color: var(--accent); margin-top: 6px; }
+.session-view-section { margin-top: 14px; }
+.session-view-copy { font-size: 16px; line-height: 1.5; color: var(--ink-70); margin-top: 5px; }
+.session-view-points { margin: 5px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 6px; }
+.session-view-points li { font-size: 16px; line-height: 1.5; color: var(--ink-70); }
+
+/* Print (spec 7.9): dark ink on white paper is the intended reading of
+   "high contrast, printable" — the one place the dark palette is wrong.
+   No navigation, no buttons, nothing clipped, single clean page. */
+@media print {
+  .no-print { display: none !important; }
+  .print-only { display: block; }
+
+  html, body { background: #fff; color: #111; }
+
+  .session-view-body { max-width: none; padding: 0; margin: 0; }
+
+  .session-view-drill {
+    background: #fff;
+    border: 1px solid #999;
+    break-inside: avoid;
+  }
+  .session-view-drill[data-current="true"] {
+    background: #fff;
+    border-color: #999;
+  }
+
+  .session-view-mat { background: #f3f0ea; }
+
+  .session-view-meta { color: #444; }
+  .session-view-removed { color: #111; }
+  .session-view-copy, .session-view-points li { color: #222; }
+  .lbl { color: #555; }
+  h1, h2, h3, h4 { color: #111; }
+}

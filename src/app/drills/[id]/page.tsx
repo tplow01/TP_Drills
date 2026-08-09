@@ -22,24 +22,29 @@ export default async function DrillDetailPage({
   searchParams,
 }: {
   params: Promise<{ id: string }>
-  searchParams: Promise<{ back?: string | string[] }>
+  searchParams: Promise<{ back?: string | string[]; session?: string | string[] }>
 }) {
   const { id } = await params
-  const { back } = await searchParams
+  const { back, session } = await searchParams
   const drill = await getDrill(id)
   if (!drill) notFound()
 
   const sessionCount = await countSessionsUsing(drill.id)
+  // Arriving from a session in the planner builder (spec 7.4/Task 7): the
+  // back control must return there, not to the drills list, so a `session`
+  // id on the URL takes priority over the list's own `back` state.
+  const sessionId = typeof session === 'string' && session !== '' ? session : null
   // The list's filter and sort came in on `back`; hand them straight back so
   // leaving this screen restores the list as it was (spec 7.1).
-  const backHref = backToDrillsHref(back)
+  const backHref = sessionId ? `/planner?session=${sessionId}` : backToDrillsHref(back)
+  const backLabel = sessionId ? 'Session' : 'Drills'
 
   return (
     <main>
       <ScreenHeader
         title={drill.name}
         backHref={backHref}
-        backLabel="Drills"
+        backLabel={backLabel}
         right={
           <div style={{ display: 'flex', gap: 8 }}>
             <Button variant="secondary" href={`/drills/${drill.id}/edit`}>Edit</Button>

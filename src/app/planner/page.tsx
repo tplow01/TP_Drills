@@ -1,7 +1,9 @@
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
 import { PlannerSessionList } from '@/components/sessions/PlannerSessionList'
 import { SessionDetailsForm } from '@/components/sessions/SessionDetailsForm'
-import { drillCountsBySession, listSessions } from '@/lib/sessions-server'
+import { SessionBuilder } from '@/components/sessions/SessionBuilder'
+import { drillCountsBySession, getSession, listSessions } from '@/lib/sessions-server'
+import { listDrills } from '@/lib/drills-server'
 
 // Always fresh: creating, editing or deleting a session must show up
 // immediately, and status is derived from today's date on every load.
@@ -18,9 +20,10 @@ export default async function PlannerPage({
     drillCountsBySession(),
   ])
 
-  const selected = params.session
-    ? (sessions.find((s) => s.id === params.session) ?? null)
-    : null
+  // getSession (not the plain listSessions row) carries the joined drills
+  // the builder needs, ordered by position.
+  const selected = params.session ? await getSession(params.session) : null
+  const libraryDrills = selected ? await listDrills(selected.library) : []
 
   return (
     <main>
@@ -39,11 +42,18 @@ export default async function PlannerPage({
 
         <div className="planner-detail-pane">
           {selected ? (
-            <SessionDetailsForm
-              key={selected.id}
-              session={selected}
-              drillCount={drillCounts[selected.id] ?? 0}
-            />
+            <>
+              <SessionDetailsForm
+                key={selected.id}
+                session={selected}
+                drillCount={drillCounts[selected.id] ?? 0}
+              />
+              <SessionBuilder
+                key={`${selected.id}-builder`}
+                session={selected}
+                libraryDrills={libraryDrills}
+              />
+            </>
           ) : (
             <div style={{ padding: '18px 18px 28px' }}>
               <p className="bd" style={{ fontSize: 13, color: 'var(--ink-45)' }}>

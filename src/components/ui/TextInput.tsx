@@ -17,12 +17,14 @@ const baseStyle: React.CSSProperties = {
 export function TextInput({
   value,
   onChange,
+  onBlur,
   placeholder,
   type = 'text',
   min,
 }: {
   value: string
   onChange: (value: string) => void
+  onBlur?: () => void
   placeholder?: string
   type?: 'text' | 'number' | 'date' | 'time'
   min?: number
@@ -34,6 +36,7 @@ export function TextInput({
       min={min}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
+      onBlur={onBlur}
       style={baseStyle}
     />
   )

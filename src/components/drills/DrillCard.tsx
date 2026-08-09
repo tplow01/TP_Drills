@@ -16,6 +16,7 @@ export function DrillCard({
   browseState,
   onAdd,
   added = false,
+  pending = false,
 }: {
   drill: Drill
   browseState: DrillBrowseState
@@ -25,6 +26,9 @@ export function DrillCard({
    */
   onAdd?: () => void
   added?: boolean
+  /** True while this drill's add request is in flight — a transient state,
+   * not an achievement, so it must not read as accent-orange like `added`. */
+  pending?: boolean
 }) {
   // A draft cannot be added to a session (spec 7.2). In practice drafts
   // never reach this component — DrillsBrowser pins them above the grid,
@@ -113,13 +117,15 @@ export function DrillCard({
             e.stopPropagation()
             onAdd?.()
           }}
-          disabled={!showAdd || added}
+          disabled={!showAdd || added || pending}
           aria-label={
             !showAdd
               ? 'Finish this draft before it can be added to a session'
               : added
                 ? `${drill.name} already added`
-                : `Add ${drill.name} to session`
+                : pending
+                  ? `Adding ${drill.name}…`
+                  : `Add ${drill.name} to session`
           }
           title={!showAdd ? 'Finish this draft before it can be added to a session' : undefined}
           style={{
@@ -135,13 +141,16 @@ export function DrillCard({
             fontSize: 15,
             fontWeight: 700,
             lineHeight: 1,
-            background: added ? 'var(--chip-bg)' : 'var(--accent)',
-            color: added ? 'var(--ink-45)' : 'var(--ground)',
+            // Pending is transient, not an achievement, so it stays on the
+            // quiet chip treatment rather than accent — only the settled
+            // "added" checkmark and the live "+" get the stronger states.
+            background: added || pending ? 'var(--chip-bg)' : 'var(--accent)',
+            color: added || pending ? 'var(--ink-45)' : 'var(--ground)',
             opacity: !showAdd ? 0.4 : 1,
-            cursor: !showAdd || added ? 'not-allowed' : 'pointer',
+            cursor: !showAdd || added || pending ? 'not-allowed' : 'pointer',
           }}
         >
-          {added ? '✓' : '+'}
+          {added ? '✓' : pending ? '…' : '+'}
         </button>
       )}
     </div>

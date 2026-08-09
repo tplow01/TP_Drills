@@ -21,7 +21,11 @@ export default async function DrillsPage({
     // Spec 7.4: the tray is conditional — only fetched, and only ever
     // rendered, when arriving with ?session=<id>. An unknown or deleted id
     // resolves to null, which DrillsBrowser treats the same as no id at all.
-    sessionId ? getSession(sessionId) : Promise.resolve(null),
+    // getSession throws on a malformed id (e.g. not a UUID — PostgREST
+    // errors at the database rather than returning null), so a bad id must
+    // not crash the whole library screen; it degrades to "no tray" instead.
+    // getSession itself stays throwing — other callers rely on that.
+    sessionId ? getSession(sessionId).catch(() => null) : Promise.resolve(null),
   ])
 
   return (

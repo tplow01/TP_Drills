@@ -227,6 +227,7 @@ export function DrillsBrowser({
           emptyState={emptyState}
           onAdd={session ? handleAdd : undefined}
           addedIds={session ? addedIds : undefined}
+          pendingId={session ? busyDrillId : undefined}
         />
       </div>
 

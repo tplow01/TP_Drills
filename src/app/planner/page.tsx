@@ -20,8 +20,11 @@ export default async function PlannerPage({
   ])
 
   // getSession (not the plain listSessions row) carries the joined drills
-  // the builder needs, ordered by position.
-  const selected = params.session ? await getSession(params.session) : null
+  // the builder needs, ordered by position. It throws on a malformed id
+  // (e.g. not a UUID errors at the database rather than returning null), so
+  // a bad id must not crash the page — it falls back to no selection.
+  // getSession itself stays throwing — other callers rely on that.
+  const selected = params.session ? await getSession(params.session).catch(() => null) : null
 
   return (
     <main>

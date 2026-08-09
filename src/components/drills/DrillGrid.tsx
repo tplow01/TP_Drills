@@ -9,6 +9,7 @@ export function DrillGrid({
   emptyState,
   onAdd,
   addedIds,
+  pendingId,
 }: {
   drills: Drill[]
   /** Rides along in each card's href so Back returns to this exact list. */
@@ -17,6 +18,8 @@ export function DrillGrid({
   /** Present only when the session tray is up (spec 7.4). */
   onAdd?: (drill: Drill) => void
   addedIds?: ReadonlySet<string>
+  /** The drill id whose add request is currently in flight, if any. */
+  pendingId?: string | null
 }) {
   if (drills.length === 0) return <>{emptyState}</>
   return (
@@ -34,6 +37,7 @@ export function DrillGrid({
           browseState={browseState}
           onAdd={onAdd ? () => onAdd(drill) : undefined}
           added={addedIds?.has(drill.id) ?? false}
+          pending={pendingId === drill.id}
         />
       ))}
     </div>

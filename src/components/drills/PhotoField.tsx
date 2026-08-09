@@ -42,18 +42,20 @@ export function PhotoField({
           // eslint-disable-next-line @next/next/no-img-element
           <img src={value} alt="" style={{ maxWidth: '100%', maxHeight: 220, objectFit: 'contain' }} />
         ) : (
-          <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.09em', color: 'rgba(21,21,21,0.35)' }}>
+          <span style={{ fontSize: 10, fontWeight: 600, letterSpacing: '0.09em', color: 'var(--on-mat-muted)' }}>
             {busy ? 'COMPRESSING…' : 'NO IMAGE'}
           </span>
         )}
       </div>
 
-      {/* capture="environment" opens the camera directly on phone. */}
+      {/* No `capture`: on iOS Safari and most Android browsers it forces the
+          camera and removes "Photo Library". Spec 7.3 wants camera OR library,
+          and the common case — a screenshot, or a page already photographed —
+          lives in the library. `accept` alone still offers the camera. */}
       <input
         ref={input}
         type="file"
         accept="image/*"
-        capture="environment"
         hidden
         onChange={(e) => {
           const file = e.target.files?.[0]

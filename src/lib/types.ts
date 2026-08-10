@@ -100,3 +100,32 @@ export interface DrillStats {
   times_used: number
   avg_rating: number | null
 }
+
+export type ElementColor = 'green' | 'blue' | 'yellow' | 'red' | 'black' | 'gray'
+export type ElementKind = 'shape' | 'equipment' | 'player' | 'arrow'
+export type PitchPreset = 'full' | 'half' | 'grid'
+
+export interface DiagramElement {
+  id: string
+  kind: ElementKind
+  type: string
+  color: ElementColor
+  x: number
+  y: number
+  /** Shapes (drag-sized) and arrows/lines (point-to-point) only. */
+  x2?: number
+  y2?: number
+}
+
+export interface Diagram {
+  id: string
+  drill_id: string
+  position: number
+  title: string | null
+  pitch_preset: PitchPreset
+  elements: DiagramElement[]
+  created_at: string
+  updated_at: string
+}
+
+export type DiagramInput = Omit<Diagram, 'id' | 'created_at' | 'updated_at'>

@@ -111,11 +111,11 @@ export function SessionBuilder({
     // requires > 0) must not silently write 0 or clear the override — leave
     // the previous value in place and say why.
     const parsed = Number(trimmed)
-    if (!Number.isFinite(parsed) || !Number.isInteger(Math.round(parsed)) || Math.round(parsed) <= 0) {
+    if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed <= 0) {
       setRowError('Enter a whole number of minutes greater than 0.')
       return
     }
-    const mins = Math.round(parsed)
+    const mins = parsed
 
     if (mins === effectiveDuration(item)) {
       clearDraft()
@@ -242,7 +242,7 @@ export function SessionBuilder({
               <div style={{ width: 64 }}>
                 <TextInput
                   type="number"
-                  min={0}
+                  min={1}
                   value={durationDrafts[item.id] ?? String(effectiveDuration(item))}
                   onChange={(v) => setDurationDrafts((d) => ({ ...d, [item.id]: v }))}
                   onBlur={() => commitDuration(item)}
@@ -269,7 +269,7 @@ export function SessionBuilder({
       {confirmRemoveId && (
         <div
           style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
+            position: 'fixed', inset: 0, background: 'var(--scrim)',
             display: 'grid', placeItems: 'center', padding: 20, zIndex: 30,
           }}
         >

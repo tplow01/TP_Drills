@@ -8,6 +8,19 @@
 -- which does not exist for text[] -- ALTER COLUMN ... TYPE re-validates all
 -- constraints against the new type, so the constraint must be dropped before
 -- the type change and recreated afterward using the array-typed check.
+--
+-- Postgres's ALTER COLUMN ... TYPE ... USING clause must be a plain
+-- expression -- it cannot contain a subquery (error 0A000). The split/filter
+-- logic needs one, so it's wrapped in a throwaway SQL function: the function
+-- BODY may contain a subquery, and calling the function is just a function
+-- call, which USING accepts. Dropped again once both columns are converted.
+
+create function drill_notes_to_array(raw text) returns text[]
+  language sql immutable as $$
+    select coalesce(array_agg(entry), '{}')
+    from unnest(string_to_array(raw, chr(10))) as entry
+    where btrim(entry) <> ''
+  $$;
 
 alter table drill
   drop constraint complete_fields_required;
@@ -17,11 +30,7 @@ alter table drill
 
 alter table drill
   alter column setup type text[]
-  using (
-    select coalesce(array_agg(entry), '{}')
-    from unnest(string_to_array(setup, chr(10))) as entry
-    where btrim(entry) <> ''
-  );
+  using drill_notes_to_array(setup);
 
 alter table drill
   alter column setup set default '{}';
@@ -31,14 +40,12 @@ alter table drill
 
 alter table drill
   alter column how_it_works type text[]
-  using (
-    select coalesce(array_agg(entry), '{}')
-    from unnest(string_to_array(how_it_works, chr(10))) as entry
-    where btrim(entry) <> ''
-  );
+  using drill_notes_to_array(how_it_works);
 
 alter table drill
   alter column how_it_works set default '{}';
+
+drop function drill_notes_to_array(text);
 
 alter table drill
   add constraint complete_fields_required check (

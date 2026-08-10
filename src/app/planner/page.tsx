@@ -28,9 +28,7 @@ export default async function PlannerPage({
 
   return (
     <main>
-      {/* No hub yet (Phase 2 Task 11 replaces this front door), so Planner's
-          back control points at the other Phase 1/2 screen for now. */}
-      <ScreenHeader title="Planner" backHref="/drills" backLabel="Drills" />
+      <ScreenHeader title="Planner" backHref="/" backLabel="Hub" />
 
       <div className="planner-layout" data-has-selection={selected ? 'true' : 'false'}>
         <div className="planner-list-pane">

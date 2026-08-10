@@ -30,8 +30,7 @@ export default async function DrillsPage({
 
   return (
     <main>
-      {/* No backHref: Drills is the Phase 1 front door. */}
-      <ScreenHeader title="Drills" />
+      <ScreenHeader title="Drills" backHref="/" backLabel="Hub" />
       {/* Filter and sort state lives in the URL (spec 7.1), so the browser
           reads useSearchParams and needs a Suspense boundary. */}
       <Suspense>

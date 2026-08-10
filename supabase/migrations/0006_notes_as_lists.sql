@@ -18,9 +18,9 @@ alter table drill
 alter table drill
   alter column setup type text[]
   using (
-    select coalesce(array_agg(line), '{}')
-    from unnest(string_to_array(setup, chr(10))) as line
-    where btrim(line) <> ''
+    select coalesce(array_agg(entry), '{}')
+    from unnest(string_to_array(setup, chr(10))) as entry
+    where btrim(entry) <> ''
   );
 
 alter table drill
@@ -32,9 +32,9 @@ alter table drill
 alter table drill
   alter column how_it_works type text[]
   using (
-    select coalesce(array_agg(line), '{}')
-    from unnest(string_to_array(how_it_works, chr(10))) as line
-    where btrim(line) <> ''
+    select coalesce(array_agg(entry), '{}')
+    from unnest(string_to_array(how_it_works, chr(10))) as entry
+    where btrim(entry) <> ''
   );
 
 alter table drill

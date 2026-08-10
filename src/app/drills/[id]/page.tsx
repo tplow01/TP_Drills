@@ -4,8 +4,18 @@ import { Button } from '@/components/ui/Button'
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
 import { backToDrillsHref } from '@/lib/drill-query'
 import { countSessionsUsing, getDrill } from '@/lib/drills-server'
-import { listDrillStats } from '@/lib/sessions-server'
+import { listDrillHistory, listDrillStats } from '@/lib/sessions-server'
 import { typeLabel } from '@/lib/taxonomy'
+
+/** Long-form date, e.g. "Saturday 8 August". */
+function formatHistoryDate(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  return new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  }).format(new Date(y, m - 1, d))
+}
 
 export const dynamic = 'force-dynamic'
 
@@ -30,10 +40,16 @@ export default async function DrillDetailPage({
   const drill = await getDrill(id)
   if (!drill) notFound()
 
-  const sessionCount = await countSessionsUsing(drill.id)
-  // Small single-coach dataset — reading the whole view and picking one row
-  // is simpler than a filtered query, same tradeoff as drillCountsBySession.
-  const allStats = await listDrillStats()
+  const [sessionCount, allStats, history] = await Promise.all([
+    countSessionsUsing(drill.id),
+    // Small single-coach dataset — reading the whole view and picking one row
+    // is simpler than a filtered query, same tradeoff as drillCountsBySession.
+    listDrillStats(),
+    // The reflection history (spec 6.3): every past rating and note, with
+    // the session it came from and its date, live from the same source as
+    // the aggregate above — never a stored, staleable copy.
+    listDrillHistory(drill.id),
+  ])
   const stats = allStats[drill.id]
   // Arriving from a session in the planner builder (spec 7.4/Task 7): the
   // back control must return there, not to the drills list, so a `session`
@@ -107,11 +123,47 @@ export default async function DrillDetailPage({
         {drill.tags.length > 0 && <Block label="Tags">{drill.tags.join(', ')}</Block>}
         {drill.source && <Block label="Source">{drill.source}</Block>}
 
-        {stats && stats.times_used > 0 && (
-          <Block label="Reflected sessions">
-            Used {stats.times_used} time{stats.times_used === 1 ? '' : 's'}
-            {stats.avg_rating !== null && ` · avg rating ${stats.avg_rating.toFixed(1)}`}
-          </Block>
+        <Block label="Usage">
+          {!stats || stats.times_used === 0
+            ? 'Never used'
+            : `Used ${stats.times_used} time${stats.times_used === 1 ? '' : 's'}${
+                stats.avg_rating === null
+                  ? ' · not yet rated'
+                  : ` · avg rating ${stats.avg_rating.toFixed(1)}`
+              }`}
+        </Block>
+
+        {history.length > 0 && (
+          <section style={{ marginBottom: 20 }}>
+            <div className="lbl" style={{ marginBottom: 7 }}>Reflection history</div>
+            {history.map((entry) => (
+              <div
+                key={entry.session_id}
+                style={{
+                  borderBottom: '1px solid var(--hairline)',
+                  padding: '10px 0',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                  <span style={{ fontSize: 13, fontWeight: 600 }}>{entry.session_name}</span>
+                  {entry.rating !== null && (
+                    <span style={{ fontSize: 12, color: 'var(--accent)', whiteSpace: 'nowrap' }}>
+                      ★ {entry.rating}
+                    </span>
+                  )}
+                </div>
+                <div style={{ fontSize: 11, color: 'var(--ink-45)', marginTop: 2 }}>
+                  {formatHistoryDate(entry.session_date)}
+                  {entry.rating === null && ' · not rated'}
+                </div>
+                {entry.note && (
+                  <p style={{ fontSize: 12, color: 'var(--ink-70)', marginTop: 6, whiteSpace: 'pre-wrap' }}>
+                    {entry.note}
+                  </p>
+                )}
+              </div>
+            ))}
+          </section>
         )}
       </div>
     </main>

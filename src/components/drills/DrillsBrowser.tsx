@@ -9,7 +9,7 @@ import type { DrillFilter } from '@/lib/filters'
 import { browseStateToQuery, drillHref, parseBrowseState } from '@/lib/drill-query'
 import type { DrillBrowseState } from '@/lib/drill-query'
 import { addDrillToSession } from '@/lib/sessions'
-import type { Drill, Library, SessionWithDrills } from '@/lib/types'
+import type { Drill, DrillStats, Library, SessionWithDrills } from '@/lib/types'
 import { Segment } from '@/components/ui/Segment'
 import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/TextInput'
@@ -29,6 +29,7 @@ export function DrillsBrowser({
   outfield,
   goalkeeping,
   session: initialSession,
+  stats,
 }: {
   outfield: Drill[]
   goalkeeping: Drill[]
@@ -38,6 +39,8 @@ export function DrillsBrowser({
    * the per-card `+` — absent on every other visit to /drills.
    */
   session?: SessionWithDrills | null
+  /** Derived stats from the drill_stats view, keyed by drill id (Task 12). */
+  stats: Record<string, DrillStats>
 }) {
   const params = useSearchParams()
 
@@ -228,6 +231,7 @@ export function DrillsBrowser({
           onAdd={session ? handleAdd : undefined}
           addedIds={session ? addedIds : undefined}
           pendingId={session ? busyDrillId : undefined}
+          stats={stats}
         />
       </div>
 

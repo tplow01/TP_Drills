@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { drillHref } from '@/lib/drill-query'
 import type { DrillBrowseState } from '@/lib/drill-query'
 import { typeLabel } from '@/lib/taxonomy'
-import type { Drill } from '@/lib/types'
+import type { Drill, DrillStats } from '@/lib/types'
 
 function playersLabel(drill: Drill): string {
   if (drill.players_min === null) return '—'
@@ -11,12 +11,24 @@ function playersLabel(drill: Drill): string {
     : `${drill.players_min}–${drill.players_max}`
 }
 
+/**
+ * Spec: a never-used drill says so plainly, not a zero and a blank star.
+ * Distinguishes "never used" from "used but never rated" — the view can
+ * report times_used > 0 with avg_rating still null.
+ */
+function statsLabel(stats: DrillStats | undefined): string {
+  if (!stats || stats.times_used === 0) return 'Never used'
+  const used = `Used ${stats.times_used} time${stats.times_used === 1 ? '' : 's'}`
+  return stats.avg_rating === null ? `${used} · not yet rated` : `${used} · ★ ${stats.avg_rating.toFixed(1)}`
+}
+
 export function DrillCard({
   drill,
   browseState,
   onAdd,
   added = false,
   pending = false,
+  stats,
 }: {
   drill: Drill
   browseState: DrillBrowseState
@@ -29,6 +41,8 @@ export function DrillCard({
   /** True while this drill's add request is in flight — a transient state,
    * not an achievement, so it must not read as accent-orange like `added`. */
   pending?: boolean
+  /** Derived from the drill_stats view, never a stored column (Task 12). */
+  stats?: DrillStats
 }) {
   // A draft cannot be added to a session (spec 7.2). In practice drafts
   // never reach this component — DrillsBrowser pins them above the grid,
@@ -102,6 +116,12 @@ export function DrillCard({
       {drill.is_draft && (
         <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--accent)', marginTop: 7 }}>
           Draft — needs finishing
+        </div>
+      )}
+
+      {!drill.is_draft && (
+        <div style={{ fontSize: 10, color: 'var(--ink-45)', marginTop: 4 }}>
+          {statsLabel(stats)}
         </div>
       )}
       </Link>

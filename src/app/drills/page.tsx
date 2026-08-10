@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { DrillsBrowser } from '@/components/drills/DrillsBrowser'
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
 import { listDrills } from '@/lib/drills-server'
-import { getSession } from '@/lib/sessions-server'
+import { getSession, listDrillStats } from '@/lib/sessions-server'
 
 // Always fresh: the library changes whenever the coach adds a drill.
 export const dynamic = 'force-dynamic'
@@ -15,7 +15,7 @@ export default async function DrillsPage({
   const { session: sessionParam } = await searchParams
   const sessionId = typeof sessionParam === 'string' && sessionParam !== '' ? sessionParam : null
 
-  const [outfield, goalkeeping, session] = await Promise.all([
+  const [outfield, goalkeeping, session, stats] = await Promise.all([
     listDrills('outfield'),
     listDrills('goalkeeping'),
     // Spec 7.4: the tray is conditional — only fetched, and only ever
@@ -26,6 +26,8 @@ export default async function DrillsPage({
     // not crash the whole library screen; it degrades to "no tray" instead.
     // getSession itself stays throwing — other callers rely on that.
     sessionId ? getSession(sessionId).catch(() => null) : Promise.resolve(null),
+    // Derived from drill_stats, never a stored column (Task 12, criterion 4).
+    listDrillStats(),
   ])
 
   return (
@@ -34,7 +36,7 @@ export default async function DrillsPage({
       {/* Filter and sort state lives in the URL (spec 7.1), so the browser
           reads useSearchParams and needs a Suspense boundary. */}
       <Suspense>
-        <DrillsBrowser outfield={outfield} goalkeeping={goalkeeping} session={session} />
+        <DrillsBrowser outfield={outfield} goalkeeping={goalkeeping} session={session} stats={stats} />
       </Suspense>
     </main>
   )

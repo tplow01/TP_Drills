@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import type { DrillBrowseState } from '@/lib/drill-query'
-import type { Drill } from '@/lib/types'
+import type { Drill, DrillStats } from '@/lib/types'
 import { DrillCard } from './DrillCard'
 
 export function DrillGrid({
@@ -10,6 +10,7 @@ export function DrillGrid({
   onAdd,
   addedIds,
   pendingId,
+  stats,
 }: {
   drills: Drill[]
   /** Rides along in each card's href so Back returns to this exact list. */
@@ -20,6 +21,8 @@ export function DrillGrid({
   addedIds?: ReadonlySet<string>
   /** The drill id whose add request is currently in flight, if any. */
   pendingId?: string | null
+  /** Derived stats from the drill_stats view, keyed by drill id (Task 12). */
+  stats?: Record<string, DrillStats>
 }) {
   if (drills.length === 0) return <>{emptyState}</>
   return (
@@ -38,6 +41,7 @@ export function DrillGrid({
           onAdd={onAdd ? () => onAdd(drill) : undefined}
           added={addedIds?.has(drill.id) ?? false}
           pending={pendingId === drill.id}
+          stats={stats?.[drill.id]}
         />
       ))}
     </div>

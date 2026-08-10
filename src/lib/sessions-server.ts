@@ -68,6 +68,57 @@ export async function drillCountsBySession(): Promise<Record<string, number>> {
   return counts
 }
 
+/** One past reflection entry for a drill, with the session it came from. */
+export interface DrillHistoryEntry {
+  session_id: string
+  session_name: string
+  session_date: string
+  rating: number | null
+  note: string | null
+}
+
+/**
+ * Server-side. Every past session_drill row for one drill — rating and note,
+ * each with the session it came from and its date — newest first. Gated on
+ * "session date has passed" to match drill_stats (0005): a rating on a
+ * not-yet-past session must not appear as history before the session runs.
+ */
+export async function listDrillHistory(drillId: string): Promise<DrillHistoryEntry[]> {
+  const supabase = await createServerClient()
+  const { data, error } = await supabase
+    .from('session_drill')
+    .select('rating, note, session:session(id, name, date)')
+    .eq('drill_id', drillId)
+
+  if (error) throw new Error(`Failed to load drill history: ${error.message}`)
+
+  const today = new Date()
+  const todayISO = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+
+  type SessionRef = { id: string; name: string; date: string | null }
+  type Row = { rating: number | null; note: string | null; session: SessionRef | SessionRef[] | null }
+
+  function sessionOf(row: Row): SessionRef | null {
+    if (row.session === null) return null
+    return Array.isArray(row.session) ? (row.session[0] ?? null) : row.session
+  }
+
+  return (data as Row[])
+    .map((row) => ({ row, session: sessionOf(row) }))
+    .filter(
+      (r): r is { row: Row; session: SessionRef } =>
+        r.session !== null && r.session.date !== null && (r.session.date as string) < todayISO,
+    )
+    .map(({ row, session }) => ({
+      session_id: session.id,
+      session_name: session.name,
+      session_date: session.date as string,
+      rating: row.rating,
+      note: row.note,
+    }))
+    .sort((a, b) => b.session_date.localeCompare(a.session_date))
+}
+
 /** Server-side. Reads the drill_stats view, keyed by drill_id. */
 export async function listDrillStats(): Promise<Record<string, DrillStats>> {
   const supabase = await createServerClient()

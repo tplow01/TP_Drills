@@ -2,7 +2,7 @@
   --ground: #151515;
   --card: #1f1f1f;
   --ink: #f3f0ea;
-  --accent: #f15e22;
+  --accent: #16a34a;
 
   --ink-70: rgba(243, 240, 234, 0.70);
   --ink-45: rgba(243, 240, 234, 0.45);
@@ -12,7 +12,7 @@
   /* Accent-tinted edge for notices that are actionable but not solid orange:
      the draft banner, the missing-fields panel, the removed-from-library
      notice. One design decision, one token (spec 8). */
-  --accent-border: rgba(241, 94, 34, 0.40);
+  --accent-border: rgba(22, 163, 74, 0.40);
 
   /* Interactive chrome. Named for the role, not the alpha. */
   --field-bg: rgba(243, 240, 234, 0.06);      /* text inputs, selects */
@@ -26,7 +26,7 @@
   --on-mat-muted: rgba(21, 21, 21, 0.35);
 
   /* Reflect tag's tinted background: accent at low alpha, sitting on --ground. */
-  --accent-tint: rgba(241, 94, 34, 0.14);
+  --accent-tint: rgba(22, 163, 74, 0.14);
 
   /* Modal scrim: the dimming layer behind delete/confirmation dialogs. */
   --scrim: rgba(0, 0, 0, 0.65);

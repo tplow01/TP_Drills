@@ -3,8 +3,8 @@ import type { ReactNode } from 'react'
 
 /**
  * Persistent back control, per spec 6.1: no nav bar, nothing more than two
- * levels deep. In Phase 1 the Drills screen is the front door, so it passes no
- * backHref. Phase 2 points it at the hub.
+ * levels deep. The hub (`/`) is the front door and passes no backHref; every
+ * other screen points back at the hub or at its natural parent.
  */
 export function ScreenHeader({
   title,

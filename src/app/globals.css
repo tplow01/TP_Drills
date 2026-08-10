@@ -54,12 +54,10 @@ body {
 
 /* Headline. Every h1-h4 and anything marked .hl. */
 .hl, h1, h2, h3, h4 {
-  font-family: var(--font-hubot), system-ui, sans-serif;
-  font-weight: 800;
-  font-style: italic;
-  text-transform: uppercase;
-  letter-spacing: -0.035em;
-  line-height: 0.92;
+  font-family: var(--font-jakarta), system-ui, sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
   margin: 0;
 }
 

@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import localFont from 'next/font/local'
+import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 
-const hubot = localFont({
-  src: './../fonts/HubotSans-Italic.woff2',
-  variable: '--font-hubot',
-  weight: '200 900',
-  style: 'italic',
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['700'],
+  variable: '--font-jakarta',
   display: 'swap',
 })
 
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${hubot.variable} ${mona.variable}`}>
+    <html lang="en" className={`${jakarta.variable} ${mona.variable}`}>
       <body>{children}</body>
     </html>
   )

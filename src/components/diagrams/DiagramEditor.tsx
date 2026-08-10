@@ -41,10 +41,8 @@ interface ArmedTool {
   mode: 'place' | 'draw'
 }
 
-let idCounter = 0
 function newElementId(): string {
-  idCounter += 1
-  return `el-${idCounter}`
+  return `el-${crypto.randomUUID()}`
 }
 
 export function DiagramEditor({
@@ -149,9 +147,9 @@ export function DiagramEditor({
   function handleCanvasUp() {
     if (draft && armed?.mode === 'draw') {
       const normalized =
-        draft.x2 !== undefined && draft.y2 !== undefined
+        draft.kind === 'shape' && draft.x2 !== undefined && draft.y2 !== undefined
           ? normalizeRect(draft.x, draft.y, draft.x2, draft.y2)
-          : { x: draft.x, y: draft.y }
+          : { x: draft.x, y: draft.y, x2: draft.x2, y2: draft.y2 }
       setElements((els) => [...els, { ...draft, ...normalized, id: newElementId() }])
       setDraft(null)
       setArmed(null)

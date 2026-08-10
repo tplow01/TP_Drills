@@ -134,14 +134,16 @@ export function SessionView({
                       <p className="session-view-removed">Removed from the library</p>
                     )}
 
-                    <div className="session-view-section">
-                      <p className="lbl">Setup</p>
-                      <ul className="session-view-points">
-                        {drill.setup.map((point, i) => (
-                          <li key={i} className="bd session-view-copy">{point}</li>
-                        ))}
-                      </ul>
-                    </div>
+                    {drill.setup.length > 0 && (
+                      <div className="session-view-section">
+                        <p className="lbl">Setup</p>
+                        <ul className="session-view-points">
+                          {drill.setup.map((point, i) => (
+                            <li key={i} className="bd session-view-copy">{point}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
 
                     {(diagramsByDrillId[drill.id] ?? []).length > 0 && (
                       <div className="session-view-section session-view-diagrams">

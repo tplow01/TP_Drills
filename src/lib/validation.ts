@@ -34,6 +34,7 @@ const INVALID_LABELS: Record<InvalidField, string> = {
 }
 
 const blank = (s: string | null | undefined) => (s ?? '').trim().length === 0
+const hasContent = (list: string[]) => list.some((item) => !blank(item))
 
 /**
  * What is still missing before this drill can be used in a session.
@@ -57,12 +58,9 @@ export function missingFields(input: DrillInput): RequiredField[] {
   if (input.duration_mins === null) missing.push('duration_mins')
   if (input.players_min === null) missing.push('players_min')
 
-  if (blank(input.setup)) missing.push('setup')
-  if (blank(input.how_it_works)) missing.push('how_it_works')
-
-  if (input.coaching_points.filter((p) => !blank(p)).length === 0) {
-    missing.push('coaching_points')
-  }
+  if (!hasContent(input.setup)) missing.push('setup')
+  if (!hasContent(input.how_it_works)) missing.push('how_it_works')
+  if (!hasContent(input.coaching_points)) missing.push('coaching_points')
 
   return missing
 }

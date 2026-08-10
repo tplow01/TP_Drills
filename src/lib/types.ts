@@ -26,8 +26,8 @@ export interface Drill {
   cones_needed: number
   bibs_needed: boolean
   image_url: string | null
-  setup: string
-  how_it_works: string
+  setup: string[]
+  how_it_works: string[]
   coaching_points: string[]
   progressions: string | null
   source: string | null

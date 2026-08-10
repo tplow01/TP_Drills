@@ -7,7 +7,7 @@ function drill(over: Partial<Drill> = {}): Drill {
     id: 'd1', library: 'outfield', name: 'Rondo', type: 'possession_rondo',
     age_band: 'U9-U11', suitable_from: null, duration_mins: 12,
     players_min: 8, players_max: 12, goals_needed: 0, cones_needed: 0,
-    bibs_needed: false, image_url: null, setup: '', how_it_works: '',
+    bibs_needed: false, image_url: null, setup: [], how_it_works: [],
     coaching_points: ['x'], progressions: null, source: null, tags: [],
     is_draft: false, deleted_at: null, created_at: '', updated_at: '',
     ...over,

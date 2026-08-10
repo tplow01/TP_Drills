@@ -13,7 +13,7 @@ function drill(over: Partial<Drill> = {}): Drill {
     type: 'possession_rondo', age_band: 'U9-U11', suitable_from: null,
     duration_mins: 12, players_min: 8, players_max: 12,
     goals_needed: 4, cones_needed: 12, bibs_needed: true,
-    image_url: null, setup: '30x20 grid', how_it_works: '5v3 possession',
+    image_url: null, setup: ['30x20 grid'], how_it_works: ['5v3 possession'],
     coaching_points: ['Scan before receiving'], progressions: null,
     source: null, tags: ['rondo', 'possession'], is_draft: false,
     deleted_at: null, created_at: '', updated_at: '',

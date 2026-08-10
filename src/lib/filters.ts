@@ -47,8 +47,8 @@ export function matchesSearch(drill: Drill, query: string): boolean {
   if (q === '') return true
   const haystack = [
     drill.name,
-    drill.setup,
-    drill.how_it_works,
+    ...drill.setup,
+    ...drill.how_it_works,
     ...drill.tags,
   ].join(' ').toLowerCase()
   return haystack.includes(q)

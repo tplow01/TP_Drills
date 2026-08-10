@@ -7,8 +7,8 @@ function input(over: Partial<DrillInput> = {}): DrillInput {
     library: 'outfield', name: 'Four-Goal Rondo', type: 'possession_rondo',
     age_band: 'U9-U11', suitable_from: null, duration_mins: 12,
     players_min: 8, players_max: 12, goals_needed: 4, cones_needed: 12,
-    bibs_needed: true, image_url: null, setup: '30x20 grid',
-    how_it_works: '5v3 possession', coaching_points: ['Scan before receiving'],
+    bibs_needed: true, image_url: null, setup: ['30x20 grid'],
+    how_it_works: ['5v3 possession'], coaching_points: ['Scan before receiving'],
     progressions: null, source: null, tags: [], is_draft: false,
     ...over,
   }
@@ -44,7 +44,7 @@ describe('missingFields', () => {
   })
 
   it('requires name, setup and how_it_works to be non-blank', () => {
-    const got = missingFields(input({ name: '  ', setup: '', how_it_works: '   ' }))
+    const got = missingFields(input({ name: '  ', setup: [], how_it_works: ['   '] }))
     expect(got).toContain('name')
     expect(got).toContain('setup')
     expect(got).toContain('how_it_works')
@@ -150,7 +150,7 @@ describe('isComplete', () => {
 describe('fieldLabel', () => {
   it('gives every required field a human label', () => {
     for (const f of missingFields(input({
-      name: '', setup: '', how_it_works: '', age_band: null,
+      name: '', setup: [], how_it_works: [], age_band: null,
       duration_mins: null, players_min: null, coaching_points: [],
     }))) {
       expect(fieldLabel(f).length).toBeGreaterThan(0)

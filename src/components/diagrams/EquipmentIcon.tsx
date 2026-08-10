@@ -47,14 +47,14 @@ export function EquipmentIcon({ type }: { type: string }) {
             d="M4,20 L4,7 L20,7 L20,20"
             fill="none"
             stroke="#101828"
-            strokeWidth={2}
+            strokeWidth={3}
             strokeLinecap="round"
             strokeLinejoin="round"
           />
           <path
             d="M6.5,8.5 L6.5,19 M9.5,8.5 L9.5,19 M14.5,8.5 L14.5,19 M17.5,8.5 L17.5,19"
             stroke="#c7cbd1"
-            strokeWidth={0.6}
+            strokeWidth={1}
           />
         </>
       )

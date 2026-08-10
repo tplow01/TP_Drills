@@ -32,6 +32,7 @@ function ShapeEl({ el }: { el: DiagramElement }) {
 function EquipmentEl({ el }: { el: DiagramElement }) {
   return (
     <g transform={`translate(${el.x - 12}, ${el.y - 12})`}>
+      <rect x={0} y={0} width={24} height={24} fill="transparent" />
       <EquipmentIcon type={el.type} />
     </g>
   )

@@ -57,6 +57,7 @@ The diagram editor is the reference implementation for every value below — new
 - Destructive action (light card context): `background: #fef3f2`, `border: 1px solid #fecdca`, `color: #b42318`
 - Color swatches (where a coach picks an element color): circular, 32px, `border: 3px solid #101828` when selected with a white inset ring
 - Icon + label buttons (tool palette): icon above label, `border-radius: 10px`, armed/active state gets `2px solid var(--accent)` border and a tinted background (`#f0fdf4`)
+- Placed equipment: renders in a 24×24 unit box on the pitch canvas (matching `EquipmentIcon`'s own native coordinate space), larger than the old flat-shape radii (cone/ball were `r=6`, mannequin was `r=8`) — intentional, confirmed to look right
 
 ## Out of scope for this spec
 

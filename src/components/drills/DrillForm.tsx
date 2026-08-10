@@ -9,6 +9,7 @@ import { fieldLabel, invalidFields, invalidLabel, missingFields } from '@/lib/va
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { TextInput, TextArea } from '@/components/ui/TextInput'
+import { PointListField } from '@/components/ui/PointListField'
 import { PhotoField } from './PhotoField'
 
 const selectStyle: React.CSSProperties = {
@@ -38,7 +39,7 @@ function emptyInput(library: Library): DrillInput {
     library, name: '', type: typesFor(library)[0], age_band: null,
     suitable_from: null, duration_mins: null, players_min: null, players_max: null,
     goals_needed: 0, cones_needed: 0, bibs_needed: false, image_url: null,
-    setup: '', how_it_works: '', coaching_points: [''], progressions: null,
+    setup: [''], how_it_works: [''], coaching_points: [''], progressions: null,
     source: null, tags: [], is_draft: true,
   }
 }
@@ -81,6 +82,8 @@ export function DrillForm({
         ...draft,
         // Library is fixed at creation and never changes (spec 5.4).
         library: initial ? initial.library : library,
+        setup: draft.setup.map((p) => p.trim()).filter(Boolean),
+        how_it_works: draft.how_it_works.map((p) => p.trim()).filter(Boolean),
         coaching_points: draft.coaching_points.map((p) => p.trim()).filter(Boolean),
         // A drill with anything missing stays a draft, whichever button was used.
         is_draft: missing.length > 0,
@@ -121,14 +124,13 @@ export function DrillForm({
       {!full && (
         <>
           <div style={{ marginBottom: 15 }}>
-            <Field label="Notes — tidy it up later">
-              <TextArea
-                minHeight={110}
-                value={draft.setup}
-                onChange={(value) => set('setup', value)}
-                placeholder="Anything you want to remember. This lands in Setup."
-              />
-            </Field>
+            <PointListField
+              label="Notes — tidy it up later"
+              values={draft.setup}
+              onChange={(v) => set('setup', v)}
+              addLabel="+ Add another note"
+              placeholder={() => 'Anything you want to remember. This lands in Setup.'}
+            />
           </div>
           <div style={{ marginBottom: 18 }}>
             <Button variant="ghost" onClick={() => setFull(true)}>
@@ -193,49 +195,33 @@ export function DrillForm({
           </div>
 
           <div style={{ marginTop: 15, marginBottom: 15 }}>
-            <Field label="Setup">
-              <TextArea minHeight={80} value={draft.setup} onChange={(value) => set('setup', value)} />
-            </Field>
+            <PointListField
+              label="Setup"
+              values={draft.setup}
+              onChange={(v) => set('setup', v)}
+              addLabel="+ Add setup point"
+              placeholder={(i) => (i === 0 ? 'Cones in a 20x20 square' : 'Another point')}
+            />
           </div>
 
           <div style={{ marginBottom: 15 }}>
-            <Field label="How it works">
-              <TextArea minHeight={80} value={draft.how_it_works} onChange={(value) => set('how_it_works', value)} />
-            </Field>
+            <PointListField
+              label="How it works"
+              values={draft.how_it_works}
+              onChange={(v) => set('how_it_works', v)}
+              addLabel="+ Add point"
+              placeholder={(i) => (i === 0 ? 'Players pass inside the square' : 'Another point')}
+            />
           </div>
 
-          {/* A repeating list, never one text box (spec 7.2). */}
           <div style={{ marginBottom: 15 }}>
-            <Field label="Coaching points — at least one">
-              <>
-                {draft.coaching_points.map((point, i) => (
-                  <div key={i} style={{ display: 'flex', gap: 7, marginBottom: 7 }}>
-                    <div style={{ flex: 1 }}>
-                      <TextInput
-                        value={point}
-                        placeholder={i === 0 ? 'Scan before receiving' : 'Another point'}
-                        onChange={(value) => {
-                          const next = [...draft.coaching_points]
-                          next[i] = value
-                          set('coaching_points', next)
-                        }}
-                      />
-                    </div>
-                    {draft.coaching_points.length > 1 && (
-                      <Button
-                        variant="muted"
-                        onClick={() => set('coaching_points', draft.coaching_points.filter((_, j) => j !== i))}
-                      >
-                        ×
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <Button variant="ghost" onClick={() => set('coaching_points', [...draft.coaching_points, ''])}>
-                  + Add coaching point
-                </Button>
-              </>
-            </Field>
+            <PointListField
+              label="Coaching points — at least one"
+              values={draft.coaching_points}
+              onChange={(v) => set('coaching_points', v)}
+              addLabel="+ Add coaching point"
+              placeholder={(i) => (i === 0 ? 'Scan before receiving' : 'Another point')}
+            />
           </div>
 
           <div style={{ display: 'flex', gap: 10 }}>

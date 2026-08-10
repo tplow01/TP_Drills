@@ -48,7 +48,7 @@ export function DeleteDrillDialog({
       </Button>
 
       {open && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', display: 'grid', placeItems: 'center', padding: 20, zIndex: 30 }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'var(--scrim)', display: 'grid', placeItems: 'center', padding: 20, zIndex: 30 }}>
           <div style={{ background: 'var(--card)', border: '1px solid var(--hairline)', borderRadius: 'var(--radius)', padding: 20, maxWidth: 400 }}>
             <h3 style={{ fontSize: 18 }}>Delete {drillName}?</h3>
             <p style={{ fontSize: 13, color: 'var(--ink-70)', marginTop: 10 }}>{consequence}</p>

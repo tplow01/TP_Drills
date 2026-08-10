@@ -9,6 +9,11 @@ import type { SessionWithDrills } from '@/lib/types'
 
 const RATINGS = [1, 2, 3, 4, 5] as const
 
+// Generous for a coach's jotting, not a transcript. Enforced client-side via
+// TextArea's maxLength so hitting it is visible (a counter appears), not a
+// silent truncation on save.
+const NOTE_MAX_LENGTH = 2000
+
 interface Draft {
   rating: number | null
   note: string
@@ -122,6 +127,7 @@ export function ReflectionForm({ session }: { session: SessionWithDrills }) {
                 onChange={(v) => setNote(item.id, v)}
                 placeholder="What happened with this drill?"
                 minHeight={60}
+                maxLength={NOTE_MAX_LENGTH}
               />
             </div>
           )
@@ -135,6 +141,7 @@ export function ReflectionForm({ session }: { session: SessionWithDrills }) {
           onChange={setSessionNotes}
           placeholder="Overall, how did the session go?"
           minHeight={90}
+          maxLength={NOTE_MAX_LENGTH}
         />
       </div>
 

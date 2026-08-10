@@ -47,18 +47,38 @@ export function TextArea({
   onChange,
   placeholder,
   minHeight = 80,
+  maxLength,
 }: {
   value: string
   onChange: (value: string) => void
   placeholder?: string
   minHeight?: number
+  /** Optional character cap. When set, a counter appears once the coach is close to or at the limit, rather than truncating silently. */
+  maxLength?: number
 }) {
+  const nearLimit = maxLength !== undefined && value.length >= maxLength * 0.9
+
   return (
-    <textarea
-      value={value}
-      placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
-      style={{ ...baseStyle, minHeight, resize: 'vertical' }}
-    />
+    <div>
+      <textarea
+        value={value}
+        placeholder={placeholder}
+        maxLength={maxLength}
+        onChange={(e) => onChange(e.target.value)}
+        style={{ ...baseStyle, minHeight, resize: 'vertical' }}
+      />
+      {maxLength !== undefined && nearLimit && (
+        <div
+          style={{
+            fontSize: 11,
+            color: value.length >= maxLength ? 'var(--accent)' : 'var(--ink-45)',
+            textAlign: 'right',
+            marginTop: 4,
+          }}
+        >
+          {value.length} / {maxLength}
+        </div>
+      )}
+    </div>
   )
 }

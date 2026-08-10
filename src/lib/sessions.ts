@@ -115,6 +115,13 @@ export async function setDurationOverride(sessionDrillId: string, mins: number |
  * Browser-side. Writes per-drill ratings and notes, sets session_notes, and
  * marks the session reflected. Reflection is skippable, so every rating may
  * be null.
+ *
+ * Delegates to the save_reflection() Postgres function (migration 0005)
+ * rather than issuing sequential per-row updates from here: a partial
+ * failure partway through used to leave some ratings persisted with
+ * reflected_at never set, stranding the session in `reflect` with no way to
+ * tell which entries had saved. The function body commits or rolls back as
+ * one unit.
  */
 export async function saveReflection(
   sessionId: string,
@@ -123,22 +130,12 @@ export async function saveReflection(
 ): Promise<void> {
   const supabase = createBrowserClient()
 
-  // Only rating/note change here — no position constraint is involved, so
-  // (unlike reorderSessionDrills) plain per-row updates are safe and don't
-  // need every NOT NULL column supplied.
-  for (const entry of entries) {
-    const { error: drillError } = await supabase
-      .from('session_drill')
-      .update({ rating: entry.rating, note: entry.note })
-      .eq('id', entry.sessionDrillId)
-    if (drillError) throw new Error(`Failed to save reflection: ${drillError.message}`)
-  }
-
-  const { error: sessionError } = await supabase
-    .from('session')
-    .update({ session_notes: sessionNotes, reflected_at: new Date().toISOString() })
-    .eq('id', sessionId)
-  if (sessionError) throw new Error(`Failed to save reflection: ${sessionError.message}`)
+  const { error } = await supabase.rpc('save_reflection', {
+    p_session_id: sessionId,
+    p_entries: entries,
+    p_session_notes: sessionNotes,
+  })
+  if (error) throw new Error(`Failed to save reflection: ${error.message}`)
 }
 
 /**

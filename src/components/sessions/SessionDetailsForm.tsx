@@ -70,6 +70,16 @@ export function SessionDetailsForm({
   async function handleSave() {
     const trimmedName = draft.name.trim()
     if (trimmedName === '' || saving) return
+
+    // Garbage or non-positive input must not silently become 45 — reject it
+    // visibly instead, same treatment as SessionBuilder's duration override
+    // (finding 3: the two sibling forms must agree on this).
+    const parsedMinutes = Number(draft.target_minutes)
+    if (!Number.isFinite(parsedMinutes) || !Number.isInteger(parsedMinutes) || parsedMinutes <= 0) {
+      setSaveError('Enter a whole number of minutes greater than 0.')
+      return
+    }
+
     setSaving(true)
     setSaveError(null)
     try {
@@ -78,7 +88,7 @@ export function SessionDetailsForm({
         date: draft.date === '' ? null : draft.date,
         start_time: draft.start_time === '' ? null : `${draft.start_time}:00`,
         location: draft.location.trim() === '' ? null : draft.location.trim(),
-        target_minutes: Math.max(1, Math.round(Number(draft.target_minutes)) || 45),
+        target_minutes: parsedMinutes,
       }
       await updateSession(session.id, patch)
       router.refresh()
@@ -185,7 +195,7 @@ export function SessionDetailsForm({
       {confirmingDelete && (
         <div
           style={{
-            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)',
+            position: 'fixed', inset: 0, background: 'var(--scrim)',
             display: 'grid', placeItems: 'center', padding: 20, zIndex: 30,
           }}
         >

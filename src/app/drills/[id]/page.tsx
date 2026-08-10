@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button'
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
 import { backToDrillsHref } from '@/lib/drill-query'
 import { countSessionsUsing, getDrill } from '@/lib/drills-server'
+import { listDrillStats } from '@/lib/sessions-server'
 import { typeLabel } from '@/lib/taxonomy'
 
 export const dynamic = 'force-dynamic'
@@ -30,6 +31,10 @@ export default async function DrillDetailPage({
   if (!drill) notFound()
 
   const sessionCount = await countSessionsUsing(drill.id)
+  // Small single-coach dataset — reading the whole view and picking one row
+  // is simpler than a filtered query, same tradeoff as drillCountsBySession.
+  const allStats = await listDrillStats()
+  const stats = allStats[drill.id]
   // Arriving from a session in the planner builder (spec 7.4/Task 7): the
   // back control must return there, not to the drills list, so a `session`
   // id on the URL takes priority over the list's own `back` state.
@@ -102,8 +107,12 @@ export default async function DrillDetailPage({
         {drill.tags.length > 0 && <Block label="Tags">{drill.tags.join(', ')}</Block>}
         {drill.source && <Block label="Source">{drill.source}</Block>}
 
-        {/* Reflection history and add-to-session arrive in Phase 2 with the
-            session tables. */}
+        {stats && stats.times_used > 0 && (
+          <Block label="Reflected sessions">
+            Used {stats.times_used} time{stats.times_used === 1 ? '' : 's'}
+            {stats.avg_rating !== null && ` · avg rating ${stats.avg_rating.toFixed(1)}`}
+          </Block>
+        )}
       </div>
     </main>
   )

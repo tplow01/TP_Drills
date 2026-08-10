@@ -39,7 +39,11 @@ Two deliberately different treatments, matching how a real tactics board actuall
 
 ## Typography
 
-Unchanged. Hubot Sans (bold italic uppercase headlines) and Mona Sans (body) carry over as-is — no complaint was raised about the app's type system, and changing it isn't part of what this redesign is solving.
+Headline font changes; body font doesn't.
+
+- **Headlines**: Hubot Sans (bold italic uppercase) is replaced by **Plus Jakarta Sans**, weight 700, set upright — no forced `text-transform: uppercase`, no `font-style: italic`. This is the one deliberate visual break from the current identity: the current headline treatment (bold italic uppercase, tight negative letter-spacing) reads as a bold sports-poster style; Plus Jakarta Sans upright reads as a modern, friendly geometric sans that suits the new light-card layout better than shouting in caps at every heading. Concretely, `.hl, h1, h2, h3, h4` in `globals.css` change from `font-weight: 800; font-style: italic; text-transform: uppercase; letter-spacing: -0.035em` to `font-family: var(--font-jakarta); font-weight: 700; letter-spacing: -0.01em` (no `font-style`/`text-transform` overrides).
+- **Body**: **Mona Sans** stays exactly as it is today — same file, same weight range, same usage. No change, no new font to load for body text.
+- Plus Jakarta Sans is added via `next/font/google` (self-hosted automatically at build time, consistent with the app's existing no-runtime-third-party-requests posture — Hubot Sans and Mona Sans are self-hosted local files for the same reason), registered as a new `--font-jakarta` CSS variable alongside the existing `--font-hubot`/`--font-mona` in `layout.tsx`. `--font-hubot` and the `HubotSans-Italic.woff2` file are removed once nothing references them.
 
 ## Component style reference
 
@@ -57,6 +61,6 @@ The diagram editor is the reference implementation for every value below — new
 ## Out of scope for this spec
 
 - Applying this system to the drills list, filter panel, forms, planner, or session view — each is a separate follow-up plan.
-- Any change to typography, fonts, or the dark shell's own layout/navigation structure.
+- The dark shell's own layout/navigation structure (only its accent color changes, not its structure).
 - Redesigning the player markers, shape tools, or arrow styles — confirmed to stay as already built.
 - A style guide / component library page — the diagram editor and this spec together serve as the reference until/unless one is explicitly requested.

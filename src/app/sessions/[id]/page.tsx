@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getSession } from '@/lib/sessions-server'
+import { today as todayISO } from '@/lib/dates'
 import { SessionView } from '@/components/sessions/SessionView'
 
 // Always fresh: this is read live, pitchside, right before or during a
@@ -19,5 +20,5 @@ export default async function SessionViewPage({
   const session = await getSession(id).catch(() => null)
   if (!session) notFound()
 
-  return <SessionView session={session} />
+  return <SessionView session={session} today={todayISO()} />
 }

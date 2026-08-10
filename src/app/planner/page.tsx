@@ -2,7 +2,8 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader'
 import { PlannerSessionList } from '@/components/sessions/PlannerSessionList'
 import { SessionDetailsForm } from '@/components/sessions/SessionDetailsForm'
 import { SessionBuilder } from '@/components/sessions/SessionBuilder'
-import { drillCountsBySession, getSession, listSessions } from '@/lib/sessions-server'
+import { drillCountsBySession, getSession, listSessions, plannedMinutesBySession } from '@/lib/sessions-server'
+import { today as todayISO } from '@/lib/dates'
 
 // Always fresh: creating, editing or deleting a session must show up
 // immediately, and status is derived from today's date on every load.
@@ -14,9 +15,11 @@ export default async function PlannerPage({
   searchParams: Promise<{ session?: string }>
 }) {
   const params = await searchParams
-  const [sessions, drillCounts] = await Promise.all([
+  const today = todayISO()
+  const [sessions, drillCounts, plannedMinutes] = await Promise.all([
     listSessions(),
     drillCountsBySession(),
+    plannedMinutesBySession(),
   ])
 
   // getSession (not the plain listSessions row) carries the joined drills
@@ -35,7 +38,9 @@ export default async function PlannerPage({
           <PlannerSessionList
             sessions={sessions}
             drillCounts={drillCounts}
+            plannedMinutes={plannedMinutes}
             selectedId={selected?.id ?? null}
+            today={today}
           />
         </div>
 

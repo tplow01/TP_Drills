@@ -68,6 +68,32 @@ export async function drillCountsBySession(): Promise<Record<string, number>> {
   return counts
 }
 
+/**
+ * Server-side. Planned minutes per session, keyed by session id — the sum
+ * of each drill's effective duration (override, else the drill's own
+ * duration_mins), same resolution rule as `effectiveDuration` in
+ * session-timing.ts. One aggregate query, same shape as
+ * drillCountsBySession, so callers (Hub, Schedule) can show actual planned
+ * minutes on a session row without an N+1 per row (finding 2).
+ */
+export async function plannedMinutesBySession(): Promise<Record<string, number>> {
+  const supabase = await createServerClient()
+  const { data, error } = await supabase
+    .from('session_drill')
+    .select('session_id, duration_override, drill:drill(duration_mins)')
+  if (error) throw new Error(`Failed to sum planned minutes: ${error.message}`)
+
+  type Row = { session_id: string; duration_override: number | null; drill: { duration_mins: number | null } | { duration_mins: number | null }[] | null }
+
+  const totals: Record<string, number> = {}
+  for (const row of data as Row[]) {
+    const drill = Array.isArray(row.drill) ? (row.drill[0] ?? null) : row.drill
+    const mins = row.duration_override ?? drill?.duration_mins ?? 0
+    totals[row.session_id] = (totals[row.session_id] ?? 0) + mins
+  }
+  return totals
+}
+
 /** One past reflection entry for a drill, with the session it came from. */
 export interface DrillHistoryEntry {
   session_id: string

@@ -6,33 +6,8 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader'
 import { StateTag } from '@/components/sessions/StateTag'
 import { deriveStatus } from '@/lib/session-status'
 import { effectiveDuration, timingSummary } from '@/lib/session-timing'
+import { formatShortDate, formatTime } from '@/lib/dates'
 import type { SessionWithDrills } from '@/lib/types'
-
-/** '14:30:00' -> '2:30pm'. No leading zero, minutes dropped on the hour. */
-function formatTime(time: string): string {
-  const [hourStr, minuteStr] = time.split(':')
-  const hour = Number(hourStr)
-  const minute = Number(minuteStr)
-  const period = hour >= 12 ? 'pm' : 'am'
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12
-  return minute === 0 ? `${hour12}${period}` : `${hour12}:${minuteStr}${period}`
-}
-
-/** 'YYYY-MM-DD' -> 'Tue 15 Jul', parsed as a plain calendar date. */
-function formatDate(date: string): string {
-  const [year, month, day] = date.split('-').map(Number)
-  const d = new Date(year, month - 1, day)
-  return new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(d)
-}
-
-/** Today as 'YYYY-MM-DD' in local time — matches the string-compare status logic. */
-function todayISO(): string {
-  const now = new Date()
-  const y = now.getFullYear()
-  const m = String(now.getMonth() + 1).padStart(2, '0')
-  const d = String(now.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
 
 /**
  * The pitchside artefact (spec 4, 7.9). There is no pitchside *mode* — this
@@ -40,10 +15,14 @@ function todayISO(): string {
  * component, one stylesheet with a print block, not a separate print page.
  * Large type, minimal chrome, high contrast. Planning furniture (filters,
  * reordering, secondary actions) belongs on the Planner, not here.
+ *
+ * `today` comes from the server-rendering parent (sessions/[id]/page.tsx)
+ * rather than the browser clock, so status agrees with the Hub, Schedule
+ * and Planner near a timezone boundary (finding 4).
  */
-export function SessionView({ session }: { session: SessionWithDrills }) {
+export function SessionView({ session, today }: { session: SessionWithDrills; today: string }) {
   const drillCount = session.drills.length
-  const status = deriveStatus(session, drillCount, todayISO())
+  const status = deriveStatus(session, drillCount, today)
   const timing = timingSummary(session.drills, session.target_minutes)
 
   // Tap-to-mark-current. Client state only, reset on reload — this is a
@@ -52,7 +31,7 @@ export function SessionView({ session }: { session: SessionWithDrills }) {
   const [currentId, setCurrentId] = useState<string | null>(null)
 
   const metaParts = [
-    session.date ? formatDate(session.date) : null,
+    session.date ? formatShortDate(session.date) : null,
     session.start_time ? formatTime(session.start_time) : null,
     session.location,
   ].filter((part): part is string => Boolean(part))

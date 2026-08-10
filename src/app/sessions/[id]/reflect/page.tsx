@@ -1,20 +1,12 @@
 import { notFound, redirect } from 'next/navigation'
 import { getSession } from '@/lib/sessions-server'
 import { deriveStatus } from '@/lib/session-status'
+import { today as todayISO } from '@/lib/dates'
 import { ReflectionForm } from '@/components/sessions/ReflectionForm'
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
 
 // Same freshness rule as the session view — read live, never stale.
 export const dynamic = 'force-dynamic'
-
-/** Today as 'YYYY-MM-DD' in local time — matches deriveStatus's string compare. */
-function todayISO(): string {
-  const now = new Date()
-  const y = now.getFullYear()
-  const m = String(now.getMonth() + 1).padStart(2, '0')
-  const d = String(now.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
 
 export default async function ReflectPage({
   params,

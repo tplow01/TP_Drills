@@ -1,21 +1,13 @@
 import { notFound } from 'next/navigation'
 import { DeleteDrillDialog } from '@/components/drills/DeleteDrillDialog'
+import { AddToSessionAction } from '@/components/drills/AddToSessionAction'
 import { Button } from '@/components/ui/Button'
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
 import { backToDrillsHref } from '@/lib/drill-query'
 import { countSessionsUsing, getDrill } from '@/lib/drills-server'
 import { listDrillHistory, listDrillStats } from '@/lib/sessions-server'
+import { formatLongDate } from '@/lib/dates'
 import { typeLabel } from '@/lib/taxonomy'
-
-/** Long-form date, e.g. "Saturday 8 August". */
-function formatHistoryDate(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(new Date(y, m - 1, d))
-}
 
 export const dynamic = 'force-dynamic'
 
@@ -67,7 +59,15 @@ export default async function DrillDetailPage({
         backHref={backHref}
         backLabel={backLabel}
         right={
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+            {sessionId && (
+              <AddToSessionAction
+                sessionId={sessionId}
+                drillId={drill.id}
+                drillName={drill.name}
+                disabled={drill.is_draft}
+              />
+            )}
             <Button variant="secondary" href={`/drills/${drill.id}/edit`}>Edit</Button>
             <DeleteDrillDialog
               drillId={drill.id}
@@ -153,7 +153,7 @@ export default async function DrillDetailPage({
                   )}
                 </div>
                 <div style={{ fontSize: 11, color: 'var(--ink-45)', marginTop: 2 }}>
-                  {formatHistoryDate(entry.session_date)}
+                  {formatLongDate(entry.session_date)}
                   {entry.rating === null && ' · not rated'}
                 </div>
                 {entry.note && (

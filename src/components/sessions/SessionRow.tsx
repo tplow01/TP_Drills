@@ -1,17 +1,8 @@
 import Link from 'next/link'
 import type { Session } from '@/lib/types'
 import type { SessionStatus } from '@/lib/session-status'
+import { formatTime } from '@/lib/dates'
 import { StateTag } from './StateTag'
-
-/** '14:30:00' -> '2:30pm'. No leading zero, minutes dropped on the hour. */
-function formatTime(time: string): string {
-  const [hourStr, minuteStr] = time.split(':')
-  const hour = Number(hourStr)
-  const minute = Number(minuteStr)
-  const period = hour >= 12 ? 'pm' : 'am'
-  const hour12 = hour % 12 === 0 ? 12 : hour % 12
-  return minute === 0 ? `${hour12}${period}` : `${hour12}:${minuteStr}${period}`
-}
 
 /** Short weekday for a 'YYYY-MM-DD' date, parsed as a plain calendar date. */
 function weekdayOf(date: string): string {

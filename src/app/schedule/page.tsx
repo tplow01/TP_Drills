@@ -1,32 +1,14 @@
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
 import { SessionRow } from '@/components/sessions/SessionRow'
-import { drillCountsBySession, listSessions } from '@/lib/sessions-server'
+import { drillCountsBySession, listSessions, plannedMinutesBySession } from '@/lib/sessions-server'
 import { deriveStatus, sortSessionsForPlanner } from '@/lib/session-status'
+import { formatLongDate, today as todayISO } from '@/lib/dates'
 import type { Session } from '@/lib/types'
 import type { SessionStatus } from '@/lib/session-status'
 
 // Always fresh: the timeline is anchored on today's date, computed fresh on
 // every load, same reasoning as the hub and planner.
 export const dynamic = 'force-dynamic'
-
-/** Today as 'YYYY-MM-DD' in local time — matches deriveStatus's string compare. */
-function todayISO(): string {
-  const now = new Date()
-  const y = now.getFullYear()
-  const m = String(now.getMonth() + 1).padStart(2, '0')
-  const d = String(now.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d}`
-}
-
-/** Long-form date for a section header, e.g. "Saturday 8 August". */
-function formatHeadlineDate(iso: string): string {
-  const [y, m, d] = iso.split('-').map(Number)
-  return new Intl.DateTimeFormat('en-GB', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-  }).format(new Date(y, m - 1, d))
-}
 
 /**
  * The call to action a tag press should follow — spec's "the tag is the
@@ -42,7 +24,11 @@ function hrefFor(session: Session, status: SessionStatus): string {
 
 export default async function SchedulePage() {
   const today = todayISO()
-  const [sessions, drillCounts] = await Promise.all([listSessions(), drillCountsBySession()])
+  const [sessions, drillCounts, plannedMinutes] = await Promise.all([
+    listSessions(),
+    drillCountsBySession(),
+    plannedMinutesBySession(),
+  ])
 
   const dated = sessions.filter((s) => s.date !== null)
   const undated = sessions.filter((s) => s.date === null)
@@ -71,6 +57,7 @@ export default async function SchedulePage() {
           session={session}
           status={status}
           drillCount={drillCounts[session.id] ?? 0}
+          plannedMinutes={plannedMinutes[session.id] ?? 0}
           href={hrefFor(session, status)}
           dimmed={dimmed}
         />
@@ -108,7 +95,7 @@ export default async function SchedulePage() {
             className="lbl"
             style={{ color: 'var(--accent)', whiteSpace: 'nowrap' }}
           >
-            Today · {formatHeadlineDate(today)}
+            Today · {formatLongDate(today)}
           </span>
           <div style={{ flex: 1, height: 1, background: 'var(--accent-border)' }} />
         </div>

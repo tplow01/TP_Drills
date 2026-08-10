@@ -12,37 +12,31 @@ import { TextInput } from '@/components/ui/TextInput'
 import { SessionRow } from './SessionRow'
 
 /**
- * The coach's local calendar date, computed from the browser clock rather
- * than a UTC timestamp — a session at 17:30 must not read as past because a
- * server elsewhere in the world is already into tomorrow (spec 7.4/7.8).
- */
-function todayLocal(): string {
-  const d = new Date()
-  const y = d.getFullYear()
-  const m = String(d.getMonth() + 1).padStart(2, '0')
-  const day = String(d.getDate()).padStart(2, '0')
-  return `${y}-${m}-${day}`
-}
-
-/**
  * Spec 6.2/7.4: "+ New session" is pinned above the list, sessions list
  * below it — unplanned first, then planned, then undated ("Not scheduled"),
  * then past. Selecting a row is a plain navigation to `?session=<id>`, so
  * back/refresh both just work without any client-side selection state here.
+ *
+ * `today` comes from the server-rendering parent (planner/page.tsx) rather
+ * than being computed here from the browser clock — a shared source of
+ * truth with the Hub, Schedule and reflect route guard so the same session
+ * can't show a different state tag depending on which screen rendered it
+ * (finding 4).
  */
 export function PlannerSessionList({
   sessions,
   drillCounts,
+  plannedMinutes,
   selectedId,
+  today,
 }: {
   sessions: Session[]
   drillCounts: Record<string, number>
+  plannedMinutes: Record<string, number>
   selectedId: string | null
+  today: string
 }) {
   const router = useRouter()
-  // Computed once per mount, not on every render, so the group a session
-  // falls into doesn't shift under the coach's finger mid-interaction.
-  const today = useMemo(() => todayLocal(), [])
 
   const [creating, setCreating] = useState(false)
   const [name, setName] = useState('')
@@ -168,6 +162,7 @@ export function PlannerSessionList({
                   session={session}
                   status={status}
                   drillCount={drillCounts[session.id] ?? 0}
+                  plannedMinutes={plannedMinutes[session.id] ?? 0}
                   href={`/planner?session=${session.id}`}
                 />
               </div>

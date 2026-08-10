@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createDiagram, updateDiagram } from '@/lib/diagrams'
 import { PITCH_DIMENSIONS, PitchBackground } from './PitchBackground'
 import { DiagramElements } from './DiagramElements'
+import { EquipmentIcon } from './EquipmentIcon'
 import { clamp, elementColorHex, normalizeRect } from '@/lib/diagram-elements'
 import type { Diagram, DiagramElement, ElementColor, ElementKind, PitchPreset } from '@/lib/types'
 
@@ -42,27 +43,13 @@ function ToolIcon({ type }: { type: string }) {
     case 'circle':
       return <circle cx={12} cy={12} r={7} fill="none" stroke={ink} strokeWidth={2} />
     case 'cone':
-      return <polygon points="12,4 5,20 19,20" fill={ink} />
     case 'ball':
-      return <circle cx={12} cy={12} r={6} fill="none" stroke={ink} strokeWidth={2} />
     case 'mannequin':
-      return <rect x={7} y={7} width={10} height={10} fill={ink} />
     case 'goal-small':
-      return <rect x={4} y={9} width={16} height={7} fill="none" stroke={ink} strokeWidth={2} />
     case 'ladder':
-      return (
-        <g stroke={ink} strokeWidth={2}>
-          <line x1={7} y1={4} x2={7} y2={20} />
-          <line x1={17} y1={4} x2={17} y2={20} />
-          <line x1={7} y1={8} x2={17} y2={8} />
-          <line x1={7} y1={13} x2={17} y2={13} />
-          <line x1={7} y1={18} x2={17} y2={18} />
-        </g>
-      )
     case 'pole':
-      return <line x1={12} y1={4} x2={12} y2={20} stroke={ink} strokeWidth={3} strokeLinecap="round" />
     case 'wall':
-      return <rect x={4} y={9} width={16} height={7} fill={ink} />
+      return <EquipmentIcon type={type} />
     case 'player-circle':
       return <circle cx={12} cy={12} r={7} fill="none" stroke={ink} strokeWidth={2.5} />
     case 'player-filled':

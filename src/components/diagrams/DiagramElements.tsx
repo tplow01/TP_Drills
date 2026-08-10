@@ -3,9 +3,10 @@
 
 import type { DiagramElement } from '@/lib/types'
 import { elementColorHex, normalizeRect, wavyPath } from '@/lib/diagram-elements'
+import { EquipmentIcon } from './EquipmentIcon'
 
 const RADIUS: Record<string, number> = {
-  circle: 14, cone: 6, ball: 6, mannequin: 8,
+  circle: 14,
   'player-circle': 14, 'player-omega': 14, 'player-triangle': 14, 'player-filled': 14,
 }
 
@@ -20,22 +21,20 @@ function ShapeEl({ el }: { el: DiagramElement }) {
   return <rect x={x} y={y} width={Math.max(x2 - x, 8)} height={Math.max(y2 - y, 8)} fill="none" stroke={color} strokeWidth={2} />
 }
 
+/**
+ * Equipment renders the same literal artwork as the tool palette
+ * (`EquipmentIcon`, drawn in a 24x24 space centered at (12,12)), translated
+ * so that origin lands on the element's placed (x, y) — same shape at
+ * palette-icon size and on-canvas size, one source of truth (design doc,
+ * 2026-08-10). Unlike shapes/players/arrows, equipment ignores the coach's
+ * picked color entirely: the artwork has its own fixed, literal coloring.
+ */
 function EquipmentEl({ el }: { el: DiagramElement }) {
-  const color = elementColorHex(el.color)
-  const r = RADIUS[el.type] ?? 8
-  if (el.type === 'cone') {
-    return <polygon points={`${el.x},${el.y - r} ${el.x - r},${el.y + r} ${el.x + r},${el.y + r}`} fill={color} />
-  }
-  if (el.type === 'ball') {
-    return <circle cx={el.x} cy={el.y} r={r} fill={color} />
-  }
-  if (el.type === 'mannequin') {
-    return <rect x={el.x - r} y={el.y - r} width={r * 2} height={r * 2} fill={color} />
-  }
-  // goal-small, ladder, pole, wall share a plain bar marker — distinct icon
-  // artwork per equipment type is a v2 refinement, not load-bearing for the
-  // editor to work end to end.
-  return <rect x={el.x - r} y={el.y - 4} width={r * 2} height={8} fill={color} />
+  return (
+    <g transform={`translate(${el.x - 12}, ${el.y - 12})`}>
+      <EquipmentIcon type={el.type} />
+    </g>
+  )
 }
 
 function PlayerEl({ el }: { el: DiagramElement }) {

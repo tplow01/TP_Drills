@@ -7,7 +7,8 @@ import { StateTag } from '@/components/sessions/StateTag'
 import { deriveStatus } from '@/lib/session-status'
 import { effectiveDuration, timingSummary } from '@/lib/session-timing'
 import { formatShortDate, formatTime } from '@/lib/dates'
-import type { SessionWithDrills } from '@/lib/types'
+import { DiagramView } from '@/components/diagrams/DiagramView'
+import type { Diagram, SessionWithDrills } from '@/lib/types'
 
 /**
  * The pitchside artefact (spec 4, 7.9). There is no pitchside *mode* — this
@@ -20,7 +21,15 @@ import type { SessionWithDrills } from '@/lib/types'
  * rather than the browser clock, so status agrees with the Hub, Schedule
  * and Planner near a timezone boundary (finding 4).
  */
-export function SessionView({ session, today }: { session: SessionWithDrills; today: string }) {
+export function SessionView({
+  session,
+  today,
+  diagramsByDrillId,
+}: {
+  session: SessionWithDrills
+  today: string
+  diagramsByDrillId: Record<string, Diagram[]>
+}) {
   const drillCount = session.drills.length
   const status = deriveStatus(session, drillCount, today)
   const timing = timingSummary(session.drills, session.target_minutes)
@@ -127,8 +136,23 @@ export function SessionView({ session, today }: { session: SessionWithDrills; to
 
                     <div className="session-view-section">
                       <p className="lbl">Setup</p>
-                      <p className="bd session-view-copy">{drill.setup}</p>
+                      <ul className="session-view-points">
+                        {drill.setup.map((point, i) => (
+                          <li key={i} className="bd session-view-copy">{point}</li>
+                        ))}
+                      </ul>
                     </div>
+
+                    {(diagramsByDrillId[drill.id] ?? []).length > 0 && (
+                      <div className="session-view-section session-view-diagrams">
+                        <p className="lbl">Diagrams</p>
+                        <div className="session-view-diagrams-list">
+                          {(diagramsByDrillId[drill.id] ?? []).map((diagram) => (
+                            <DiagramView key={diagram.id} diagram={diagram} maxWidth={220} />
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Never collapsed here (brief note 1) — this is the entire
                         reason the session exists. */}

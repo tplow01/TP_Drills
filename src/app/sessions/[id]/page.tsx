@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import { getSession } from '@/lib/sessions-server'
+import { diagramsByDrillId } from '@/lib/diagrams-server'
 import { today as todayISO } from '@/lib/dates'
 import { SessionView } from '@/components/sessions/SessionView'
 
@@ -20,5 +21,7 @@ export default async function SessionViewPage({
   const session = await getSession(id).catch(() => null)
   if (!session) notFound()
 
-  return <SessionView session={session} today={todayISO()} />
+  const diagrams = await diagramsByDrillId(session.drills.map((item) => item.drill_id))
+
+  return <SessionView session={session} today={todayISO()} diagramsByDrillId={diagrams} />
 }

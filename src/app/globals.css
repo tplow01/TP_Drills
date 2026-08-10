@@ -255,3 +255,19 @@ a { color: inherit; text-decoration: none; }
     align-items: start;
   }
 }
+
+/* Session view diagrams (design doc, 2026-08-10): stacked full-width on
+   phone/print; allowed to sit side by side when there's room, matching how
+   this screen already scales its type and spacing up from the planning
+   screens. */
+.session-view-diagrams-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 6px;
+}
+.session-view-diagrams-list > svg { flex: none; }
+
+@media print {
+  .session-view-diagrams-list { break-inside: avoid; }
+}

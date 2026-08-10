@@ -28,6 +28,6 @@ create trigger drill_diagram_updated_at
 -- Same deliberate no-auth posture as drill and session (spec 12).
 alter table drill_diagram enable row level security;
 
-drop policy if exists "public all drill diagrams" on drill_diagram;
-create policy "public all drill diagrams" on drill_diagram
+drop policy if exists drill_diagram_public_all on drill_diagram;
+create policy drill_diagram_public_all on drill_diagram
   for all using (true) with check (true);

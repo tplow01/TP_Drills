@@ -7,7 +7,6 @@ import { createDiagram, updateDiagram } from '@/lib/diagrams'
 import { PITCH_DIMENSIONS, PitchBackground } from './PitchBackground'
 import { DiagramElements } from './DiagramElements'
 import { clamp, elementColorHex, normalizeRect } from '@/lib/diagram-elements'
-import { Button } from '@/components/ui/Button'
 import type { Diagram, DiagramElement, ElementColor, ElementKind, PitchPreset } from '@/lib/types'
 
 const PALETTE_COLORS: ElementColor[] = ['green', 'blue', 'yellow', 'red', 'black', 'gray']
@@ -28,11 +27,77 @@ const ARROW_TOOLS = [
 ]
 
 const TOOL_GROUPS = [
-  ['Shapes (click+drag)', 'shape', SHAPE_TOOLS],
-  ['Equipment (drag)', 'equipment', EQUIPMENT_TOOLS],
-  ['Players (drag)', 'player', PLAYER_TOOLS],
-  ['Arrows + lines (click+drag)', 'arrow', ARROW_TOOLS],
+  ['Shapes', 'Click + drag', 'shape', SHAPE_TOOLS],
+  ['Equipment', 'Drag onto pitch', 'equipment', EQUIPMENT_TOOLS],
+  ['Players', 'Drag onto pitch', 'player', PLAYER_TOOLS],
+  ['Arrows + lines', 'Click + drag', 'arrow', ARROW_TOOLS],
 ] as const
+
+/** Small 24x24 preview icon per tool type, dark-on-white so it reads on the light palette cards — the tactile "icon button" look the tactics-board direction asked for. */
+function ToolIcon({ type }: { type: string }) {
+  const ink = '#344054'
+  switch (type) {
+    case 'square':
+      return <rect x={5} y={5} width={14} height={14} rx={2} fill="none" stroke={ink} strokeWidth={2} />
+    case 'circle':
+      return <circle cx={12} cy={12} r={7} fill="none" stroke={ink} strokeWidth={2} />
+    case 'cone':
+      return <polygon points="12,4 5,20 19,20" fill={ink} />
+    case 'ball':
+      return <circle cx={12} cy={12} r={6} fill="none" stroke={ink} strokeWidth={2} />
+    case 'mannequin':
+      return <rect x={7} y={7} width={10} height={10} fill={ink} />
+    case 'goal-small':
+      return <rect x={4} y={9} width={16} height={7} fill="none" stroke={ink} strokeWidth={2} />
+    case 'ladder':
+      return (
+        <g stroke={ink} strokeWidth={2}>
+          <line x1={7} y1={4} x2={7} y2={20} />
+          <line x1={17} y1={4} x2={17} y2={20} />
+          <line x1={7} y1={8} x2={17} y2={8} />
+          <line x1={7} y1={13} x2={17} y2={13} />
+          <line x1={7} y1={18} x2={17} y2={18} />
+        </g>
+      )
+    case 'pole':
+      return <line x1={12} y1={4} x2={12} y2={20} stroke={ink} strokeWidth={3} strokeLinecap="round" />
+    case 'wall':
+      return <rect x={4} y={9} width={16} height={7} fill={ink} />
+    case 'player-circle':
+      return <circle cx={12} cy={12} r={7} fill="none" stroke={ink} strokeWidth={2.5} />
+    case 'player-filled':
+      return <circle cx={12} cy={12} r={7} fill={ink} />
+    case 'player-triangle':
+      return <polygon points="12,5 5,19 19,19" fill="none" stroke={ink} strokeWidth={2.5} />
+    case 'player-omega':
+      return <text x={12} y={18} fontSize={16} textAnchor="middle" fill={ink}>&#937;</text>
+    case 'arrow-solid':
+      return (
+        <g stroke={ink} strokeWidth={2.5}>
+          <line x1={4} y1={20} x2={18} y2={6} />
+          <polygon points="18,4 22,6 18,10" fill={ink} stroke="none" />
+        </g>
+      )
+    case 'arrow-dashed':
+      return (
+        <g stroke={ink} strokeWidth={2.5}>
+          <line x1={4} y1={20} x2={18} y2={6} strokeDasharray="4 3" />
+          <polygon points="18,4 22,6 18,10" fill={ink} stroke="none" />
+        </g>
+      )
+    case 'arrow-wavy':
+      return (
+        <g stroke={ink} strokeWidth={2.5} fill="none">
+          <path d="M4,20 Q9,12 12,14 Q15,16 18,6" />
+          <polygon points="18,4 22,6 18,10" fill={ink} stroke="none" />
+        </g>
+      )
+    case 'line-solid':
+      return <line x1={4} y1={20} x2={20} y2={4} stroke={ink} strokeWidth={2.5} />
+    default:
+      return null
+  }
+}
 
 interface ArmedTool {
   kind: ElementKind
@@ -193,13 +258,33 @@ export function DiagramEditor({
   }
 
   if (!preset) {
+    const presetOptions: { value: PitchPreset; label: string; sub: string }[] = [
+      { value: 'full', label: 'Full pitch', sub: 'Both goals, halfway line, centre circle' },
+      { value: 'half', label: 'Half pitch', sub: 'One goal, no halfway line' },
+      { value: 'grid', label: 'Grid, no markings', sub: 'Plain grid — draw your own lines' },
+    ]
     return (
-      <div style={{ padding: 24, maxWidth: 420 }}>
-        <div className="lbl" style={{ marginBottom: 12 }}>Choose a background</div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <Button variant="secondary" fullWidth onClick={() => setPreset('full')}>Full pitch</Button>
-          <Button variant="secondary" fullWidth onClick={() => setPreset('half')}>Half pitch</Button>
-          <Button variant="secondary" fullWidth onClick={() => setPreset('grid')}>Grid, no markings</Button>
+      <div style={{ background: '#f4f5f7', minHeight: '100dvh', padding: '40px 24px' }}>
+        <div style={{ maxWidth: 420, margin: '0 auto' }}>
+          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#667085', marginBottom: 14 }}>
+            Choose a background
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {presetOptions.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => setPreset(opt.value)}
+                style={{
+                  textAlign: 'left', padding: '16px 18px', borderRadius: 14, cursor: 'pointer',
+                  background: '#ffffff', border: '1px solid #e4e7ec',
+                  boxShadow: '0 1px 2px rgba(16,24,40,0.06), 0 1px 3px rgba(16,24,40,0.1)',
+                }}
+              >
+                <div style={{ fontSize: 15, fontWeight: 700, color: '#101828' }}>{opt.label}</div>
+                <div style={{ fontSize: 12, color: '#667085', marginTop: 3 }}>{opt.sub}</div>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     )
@@ -207,67 +292,103 @@ export function DiagramEditor({
 
   const { width, height } = PITCH_DIMENSIONS[preset]
   const previewElements = draft ? [...elements, draft] : elements
+  const cardStyle: React.CSSProperties = {
+    background: '#ffffff', border: '1px solid #e4e7ec', borderRadius: 14,
+    boxShadow: '0 1px 2px rgba(16,24,40,0.06), 0 1px 3px rgba(16,24,40,0.1)',
+  }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 12, borderBottom: '1px solid var(--hairline)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: '#f4f5f7' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', ...cardStyle, borderRadius: 0, borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Untitled diagram"
-          style={{ flex: 1, background: 'var(--field-bg)', border: '1px solid var(--hairline)', borderRadius: 'var(--radius-sm)', padding: '8px 10px', color: 'var(--ink)', fontFamily: 'inherit' }}
+          style={{ flex: 1, background: '#f9fafb', border: '1px solid #e4e7ec', borderRadius: 10, padding: '10px 14px', color: '#101828', fontFamily: 'inherit', fontSize: 14, fontWeight: 600 }}
         />
-        {selectedId && <Button variant="secondary" onClick={deleteSelected}>Delete element</Button>}
-        <Button onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
+        {selectedId && (
+          <button
+            onClick={deleteSelected}
+            style={{ padding: '10px 16px', borderRadius: 10, cursor: 'pointer', background: '#fef3f2', border: '1px solid #fecdca', color: '#b42318', fontWeight: 700, fontSize: 13 }}
+          >
+            Delete element
+          </button>
+        )}
+        <button
+          onClick={save}
+          disabled={saving}
+          style={{
+            padding: '10px 20px', borderRadius: 10, cursor: saving ? 'default' : 'pointer',
+            background: '#16a34a', border: 'none', color: '#ffffff', fontWeight: 700, fontSize: 13,
+            opacity: saving ? 0.6 : 1,
+          }}
+        >
+          {saving ? 'Saving…' : 'Save'}
+        </button>
       </div>
 
-      {error && <div style={{ padding: '0 12px', fontSize: 12, color: 'var(--accent)' }}>{error}</div>}
+      {error && <div style={{ padding: '10px 18px', fontSize: 12, fontWeight: 600, color: '#b42318', background: '#fef3f2' }}>{error}</div>}
 
-      <div style={{ display: 'flex', flex: 1, minHeight: 0 }}>
-        <div style={{ width: 220, flex: 'none', overflowY: 'auto', borderRight: '1px solid var(--hairline)', padding: 12 }}>
-          <div className="lbl" style={{ marginBottom: 6 }}>Color</div>
-          <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', flex: 1, minHeight: 0, gap: 16, padding: 16 }}>
+        <div style={{ width: 240, flex: 'none', overflowY: 'auto', padding: 16, ...cardStyle }}>
+          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#667085', marginBottom: 10 }}>
+            Color
+          </div>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
             {PALETTE_COLORS.map((c) => (
               <button
                 key={c}
                 onClick={() => setColor(c)}
                 aria-label={c}
                 style={{
-                  width: 26, height: 26, borderRadius: 6, cursor: 'pointer',
-                  border: color === c ? '2px solid var(--ink)' : '1px solid var(--hairline)',
+                  width: 32, height: 32, borderRadius: '50%', cursor: 'pointer',
+                  border: color === c ? '3px solid #101828' : '1px solid #e4e7ec',
+                  boxShadow: color === c ? '0 0 0 2px #ffffff inset' : 'none',
                   background: elementColorHex(c),
                 }}
               />
             ))}
           </div>
 
-          {TOOL_GROUPS.map(([heading, kind, tools]) => (
-            <div key={kind} style={{ marginBottom: 16 }}>
-              <div className="lbl" style={{ marginBottom: 6 }}>{heading}</div>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {tools.map((tool) => (
-                  <button
-                    key={tool.type}
-                    onPointerDown={(e) => handlePaletteDown(kind, tool.type, e)}
-                    onPointerMove={handlePaletteMove}
-                    onPointerUp={handlePaletteUp}
-                    style={{
-                      padding: '6px 10px', borderRadius: 6, fontSize: 11, cursor: 'pointer',
-                      border: armed?.kind === kind && armed.type === tool.type ? '1.5px solid var(--accent)' : '1px solid var(--hairline)',
-                      background: 'var(--field-bg)', color: 'var(--ink-70)',
-                    }}
-                  >
-                    {tool.label}
-                  </button>
-                ))}
+          {TOOL_GROUPS.map(([heading, sub, kind, tools]) => (
+            <div key={kind} style={{ marginBottom: 20 }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: '#101828' }}>{heading}</div>
+              <div style={{ fontSize: 10, color: '#98a2b3', marginBottom: 8 }}>{sub}</div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                {tools.map((tool) => {
+                  const isArmed = armed?.kind === kind && armed.type === tool.type
+                  return (
+                    <button
+                      key={tool.type}
+                      onPointerDown={(e) => handlePaletteDown(kind, tool.type, e)}
+                      onPointerMove={handlePaletteMove}
+                      onPointerUp={handlePaletteUp}
+                      title={tool.label}
+                      style={{
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                        padding: '8px 4px', borderRadius: 10, cursor: 'pointer',
+                        border: isArmed ? '2px solid #16a34a' : '1px solid #e4e7ec',
+                        background: isArmed ? '#f0fdf4' : '#f9fafb',
+                      }}
+                    >
+                      <svg width={22} height={22} viewBox="0 0 24 24"><ToolIcon type={tool.type} /></svg>
+                      <span style={{ fontSize: 9, fontWeight: 600, color: '#475467', lineHeight: 1.1 }}>{tool.label}</span>
+                    </button>
+                  )
+                })}
               </div>
             </div>
           ))}
 
-          <Button variant="ghost" onClick={() => setElements([])}>Clear all</Button>
+          <button
+            onClick={() => setElements([])}
+            style={{ width: '100%', padding: '10px 0', borderRadius: 10, cursor: 'pointer', background: 'none', border: '1px solid #fecdca', color: '#b42318', fontWeight: 700, fontSize: 12 }}
+          >
+            Clear all
+          </button>
         </div>
 
-        <div style={{ flex: 1, display: 'grid', placeItems: 'center', background: 'var(--ground)' }}>
+        <div style={{ flex: 1, display: 'grid', placeItems: 'center', ...cardStyle, padding: 16 }}>
           <svg
             ref={svgRef}
             viewBox={`0 0 ${width} ${height}`}

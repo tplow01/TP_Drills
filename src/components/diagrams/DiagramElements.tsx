@@ -101,14 +101,14 @@ export function DiagramElements({
         <g
           key={el.id}
           onPointerDown={onPointerDownElement ? (e) => onPointerDownElement(el.id, e) : undefined}
-          style={{ cursor: onPointerDownElement ? 'pointer' : undefined }}
+          style={{ cursor: onPointerDownElement ? 'pointer' : undefined, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.35))' }}
         >
           {el.kind === 'shape' && <ShapeEl el={el} />}
           {el.kind === 'equipment' && <EquipmentEl el={el} />}
           {el.kind === 'player' && <PlayerEl el={el} />}
           {el.kind === 'arrow' && <ArrowEl el={el} />}
           {selectedId === el.id && (
-            <circle cx={el.x} cy={el.y} r={22} fill="none" stroke="var(--accent)" strokeWidth={2} strokeDasharray="4 3" />
+            <circle cx={el.x} cy={el.y} r={22} fill="none" stroke="#2563eb" strokeWidth={2.5} strokeDasharray="4 3" />
           )}
         </g>
       ))}

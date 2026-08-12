@@ -2,8 +2,10 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { Diagram } from '@/lib/types'
 import { groupDiagramsIntoSteps } from '@/lib/diagram-steps'
+import { createDiagramStep } from '@/lib/diagrams'
 import { DiagramView } from './DiagramView'
 import { DiagramStepTabs } from './DiagramStepTabs'
 import { DeleteDiagramDialog } from './DeleteDiagramDialog'
@@ -17,8 +19,22 @@ import { Button } from '@/components/ui/Button'
  * experience design, 2026-08-12).
  */
 export function DiagramGallery({ drillId, diagrams }: { drillId: string; diagrams: Diagram[] }) {
+  const router = useRouter()
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [creatingStepFor, setCreatingStepFor] = useState<string | null>(null)
   const groups = groupDiagramsIntoSteps(diagrams)
+
+  async function addStep(group: (typeof groups)[number]) {
+    const last = group.diagrams[group.diagrams.length - 1]
+    setCreatingStepFor(last.id)
+    try {
+      const created = await createDiagramStep(last, diagrams.length)
+      router.push(`/drills/${drillId}/diagrams/${created.id}/edit`)
+      router.refresh()
+    } catch {
+      setCreatingStepFor(null)
+    }
+  }
 
   return (
     <div>
@@ -43,6 +59,9 @@ export function DiagramGallery({ drillId, diagrams }: { drillId: string; diagram
                   {group.diagrams.length > 1 ? `Edit step ${i + 1}` : 'Edit'}
                 </Link>
               ))}
+              <Button variant="muted" onClick={() => addStep(group)} disabled={creatingStepFor === group.diagrams[group.diagrams.length - 1].id}>
+                + New step
+              </Button>
               <Button variant="muted" onClick={() => setPendingDeleteId(group.diagrams[0].id)}>Delete</Button>
             </div>
           </div>

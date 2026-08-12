@@ -7,7 +7,8 @@ import { StateTag } from '@/components/sessions/StateTag'
 import { deriveStatus } from '@/lib/session-status'
 import { effectiveDuration, timingSummary } from '@/lib/session-timing'
 import { formatShortDate, formatTime } from '@/lib/dates'
-import { DiagramView } from '@/components/diagrams/DiagramView'
+import { DiagramStepTabs } from '@/components/diagrams/DiagramStepTabs'
+import { groupDiagramsIntoSteps } from '@/lib/diagram-steps'
 import type { Diagram, SessionWithDrills } from '@/lib/types'
 
 /**
@@ -149,8 +150,8 @@ export function SessionView({
                       <div className="session-view-section session-view-diagrams">
                         <p className="lbl">Diagrams</p>
                         <div className="session-view-diagrams-list">
-                          {(diagramsByDrillId[drill.id] ?? []).map((diagram) => (
-                            <DiagramView key={diagram.id} diagram={diagram} maxWidth={220} />
+                          {groupDiagramsIntoSteps(diagramsByDrillId[drill.id] ?? []).map((group) => (
+                            <DiagramStepTabs key={group.diagrams[0].id} group={group} maxWidth={220} />
                           ))}
                         </div>
                       </div>

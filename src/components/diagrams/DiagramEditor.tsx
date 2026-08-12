@@ -252,7 +252,7 @@ export function DiagramEditor({
       if (drillMeta && Object.keys(drillPatch).length > 0) {
         await updateDrill(drillMeta.id, drillPatch)
       }
-      router.push(`/drills/${drillId}`)
+      router.push(drillMeta ? `/drills/${drillId}/finish` : `/drills/${drillId}`)
       router.refresh()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed')

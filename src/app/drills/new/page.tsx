@@ -1,5 +1,6 @@
 import { DrillForm } from '@/components/drills/DrillForm'
 import { ScreenHeader } from '@/components/ui/ScreenHeader'
+import { Button } from '@/components/ui/Button'
 import type { Library } from '@/lib/types'
 
 export default async function NewDrillPage({
@@ -18,6 +19,11 @@ export default async function NewDrillPage({
         backHref="/drills"
         backLabel="Drills"
       />
+      <div style={{ padding: '0 18px 4px' }}>
+        <Button variant="ghost" href={`/drills/new/diagram?library=${library}`}>
+          Start with a diagram instead →
+        </Button>
+      </div>
       <DrillForm library={library} initial={null} mode={mode} />
     </main>
   )

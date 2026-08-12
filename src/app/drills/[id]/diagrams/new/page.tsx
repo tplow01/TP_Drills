@@ -6,8 +6,15 @@ import { ScreenHeader } from '@/components/ui/ScreenHeader'
 
 export const dynamic = 'force-dynamic'
 
-export default async function NewDiagramPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function NewDiagramPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ entry?: string }>
+}) {
   const { id } = await params
+  const { entry } = await searchParams
   const drill = await getDrill(id)
   if (!drill) notFound()
 
@@ -18,7 +25,7 @@ export default async function NewDiagramPage({ params }: { params: Promise<{ id:
   return (
     <main>
       <ScreenHeader title={`New diagram · ${drill.name}`} backHref={`/drills/${id}`} backLabel={drill.name} />
-      <DiagramEditor drillId={id} position={existing.length} existing={null} drillMeta={null} />
+      <DiagramEditor drillId={id} position={existing.length} existing={null} drillMeta={entry === 'diagram' ? drill : null} />
     </main>
   )
 }

@@ -51,13 +51,18 @@ function ToolIcon({ type }: { type: string }) {
     case 'wall':
       return <EquipmentIcon type={type} />
     case 'player-circle':
-      return <circle cx={12} cy={12} r={7} fill="none" stroke={ink} strokeWidth={2.5} />
+      return <circle cx={12} cy={12} r={7.5} fill="none" stroke={ink} strokeWidth={2.2} />
     case 'player-filled':
-      return <circle cx={12} cy={12} r={7} fill={ink} />
+      return <circle cx={12} cy={12} r={7.5} fill={ink} />
     case 'player-triangle':
-      return <polygon points="12,5 5,19 19,19" fill="none" stroke={ink} strokeWidth={2.5} />
+      return <polygon points="12,4.5 4.5,19.5 19.5,19.5" fill="none" stroke={ink} strokeWidth={2.2} strokeLinejoin="round" />
     case 'player-omega':
-      return <text x={12} y={18} fontSize={16} textAnchor="middle" fill={ink}>&#937;</text>
+      return (
+        <>
+          <circle cx={12} cy={12} r={7.5} fill="none" stroke={ink} strokeWidth={1.4} />
+          <text x={12} y={17} fontSize={13} fontWeight={700} textAnchor="middle" fill={ink}>&#937;</text>
+        </>
+      )
     case 'arrow-solid':
       return (
         <g stroke={ink} strokeWidth={2.5}>

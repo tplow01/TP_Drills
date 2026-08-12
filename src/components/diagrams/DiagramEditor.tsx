@@ -234,7 +234,7 @@ export function DiagramEditor({
       if (existing) {
         await updateDiagram(existing.id, { title: title.trim() || null, elements })
       } else {
-        await createDiagram({ drill_id: drillId, position, title: title.trim() || null, pitch_preset: preset, elements })
+        await createDiagram({ drill_id: drillId, position, title: title.trim() || null, pitch_preset: preset, elements, sequence_group: null })
       }
       router.push(`/drills/${drillId}`)
       router.refresh()

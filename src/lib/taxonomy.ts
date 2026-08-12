@@ -10,7 +10,7 @@ export const GK_TYPES = [
   'crosses', 'positioning', 'reactions', 'one_v_ones',
 ] as const satisfies readonly GkType[]
 
-export const AGE_BANDS = ['U6-U8', 'U9-U11'] as const satisfies readonly AgeBand[]
+export const AGE_BANDS = ['U6-U8', 'U9-U11', 'U12-U14', 'U15-U18'] as const satisfies readonly AgeBand[]
 
 const TYPE_LABELS: Record<DrillType, string> = {
   warm_up: 'Warm-up',

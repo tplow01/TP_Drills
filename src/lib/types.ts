@@ -1,6 +1,6 @@
 export type Library = 'outfield' | 'goalkeeping'
 
-export type AgeBand = 'U6-U8' | 'U9-U11'
+export type AgeBand = 'U6-U8' | 'U9-U11' | 'U12-U14' | 'U15-U18'
 
 export type OutfieldType =
   | 'warm_up' | 'passing' | 'dribbling' | 'shooting' | 'finishing'
@@ -121,6 +121,7 @@ export interface Diagram {
   id: string
   drill_id: string
   position: number
+  sequence_group: string | null
   title: string | null
   pitch_preset: PitchPreset
   elements: DiagramElement[]

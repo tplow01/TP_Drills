@@ -22,16 +22,19 @@ export function DiagramGallery({ drillId, diagrams }: { drillId: string; diagram
   const router = useRouter()
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
   const [creatingStepFor, setCreatingStepFor] = useState<string | null>(null)
+  const [stepError, setStepError] = useState<string | null>(null)
   const groups = groupDiagramsIntoSteps(diagrams)
 
   async function addStep(group: (typeof groups)[number]) {
     const last = group.diagrams[group.diagrams.length - 1]
     setCreatingStepFor(last.id)
+    setStepError(null)
     try {
       const created = await createDiagramStep(last, diagrams.length)
       router.push(`/drills/${drillId}/diagrams/${created.id}/edit`)
       router.refresh()
-    } catch {
+    } catch (e) {
+      setStepError(e instanceof Error ? e.message : 'Failed to create step')
       setCreatingStepFor(null)
     }
   }
@@ -64,6 +67,7 @@ export function DiagramGallery({ drillId, diagrams }: { drillId: string; diagram
               </Button>
               <Button variant="muted" onClick={() => setPendingDeleteId(group.diagrams[0].id)}>Delete</Button>
             </div>
+            {stepError && <div style={{ fontSize: 12, color: 'var(--accent)', marginTop: 8 }}>{stepError}</div>}
           </div>
         ))}
       </div>

@@ -18,7 +18,7 @@ export default async function EditDiagramPage({
   return (
     <main>
       <ScreenHeader title={`Edit diagram · ${drill.name}`} backHref={`/drills/${id}`} backLabel={drill.name} />
-      <DiagramEditor drillId={id} position={diagram.position} existing={diagram} />
+      <DiagramEditor drillId={id} position={diagram.position} existing={diagram} drillMeta={null} />
     </main>
   )
 }

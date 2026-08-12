@@ -18,7 +18,7 @@ export default async function NewDiagramPage({ params }: { params: Promise<{ id:
   return (
     <main>
       <ScreenHeader title={`New diagram · ${drill.name}`} backHref={`/drills/${id}`} backLabel={drill.name} />
-      <DiagramEditor drillId={id} position={existing.length} existing={null} />
+      <DiagramEditor drillId={id} position={existing.length} existing={null} drillMeta={null} />
     </main>
   )
 }

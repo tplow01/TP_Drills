@@ -4,11 +4,14 @@
 import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createDiagram, updateDiagram } from '@/lib/diagrams'
+import { updateDrill } from '@/lib/drills'
+import { deriveDrillMetadata } from '@/lib/diagram-metadata'
 import { PITCH_DIMENSIONS, PitchBackground } from './PitchBackground'
 import { DiagramElements } from './DiagramElements'
 import { EquipmentIcon } from './EquipmentIcon'
+import { DrillMetadataPanel } from './DrillMetadataPanel'
 import { clamp, elementColorHex, normalizeRect } from '@/lib/diagram-elements'
-import type { Diagram, DiagramElement, ElementColor, ElementKind, PitchPreset } from '@/lib/types'
+import type { Diagram, DiagramElement, Drill, DrillInput, ElementColor, ElementKind, PitchPreset } from '@/lib/types'
 
 const PALETTE_COLORS: ElementColor[] = ['green', 'blue', 'yellow', 'red', 'black', 'gray']
 
@@ -106,10 +109,14 @@ export function DiagramEditor({
   drillId,
   position,
   existing,
+  drillMeta,
 }: {
   drillId: string
   position: number
   existing: Diagram | null
+  /** Present only on the diagram-first entry path (Task 6) — shows the
+      metadata/taxonomy panel and patches the drill on save. */
+  drillMeta: Drill | null
 }) {
   const router = useRouter()
   const svgRef = useRef<SVGSVGElement>(null)
@@ -117,6 +124,7 @@ export function DiagramEditor({
   const [preset, setPreset] = useState<PitchPreset | null>(existing?.pitch_preset ?? null)
   const [title, setTitle] = useState(existing?.title ?? '')
   const [elements, setElements] = useState<DiagramElement[]>(existing?.elements ?? [])
+  const [drillPatch, setDrillPatch] = useState<Partial<DrillInput>>({})
   const [color, setColor] = useState<ElementColor>('green')
   const [armed, setArmed] = useState<ArmedTool | null>(null)
   const [draft, setDraft] = useState<DiagramElement | null>(null)
@@ -241,6 +249,9 @@ export function DiagramEditor({
       } else {
         await createDiagram({ drill_id: drillId, position, title: title.trim() || null, pitch_preset: preset, elements, sequence_group: null })
       }
+      if (drillMeta && Object.keys(drillPatch).length > 0) {
+        await updateDrill(drillMeta.id, drillPatch)
+      }
       router.push(`/drills/${drillId}`)
       router.refresh()
     } catch (e) {
@@ -248,6 +259,9 @@ export function DiagramEditor({
       setSaving(false)
     }
   }
+
+  const derived = deriveDrillMetadata(elements)
+  const effectiveDrill: Drill | null = drillMeta ? { ...drillMeta, ...drillPatch } : null
 
   if (!preset) {
     const presetOptions: { value: PitchPreset; label: string; sub: string }[] = [
@@ -380,6 +394,17 @@ export function DiagramEditor({
           </button>
         </div>
 
+        {effectiveDrill && (
+          <div className="diagram-editor-meta-sidebar">
+            <DrillMetadataPanel
+              drill={effectiveDrill}
+              derived={derived}
+              onPatch={(patch) => setDrillPatch((p) => ({ ...p, ...patch }))}
+              variant="sidebar"
+            />
+          </div>
+        )}
+
         <div style={{ flex: 1, display: 'grid', placeItems: 'center', ...cardStyle, padding: 16 }}>
           <svg
             ref={svgRef}
@@ -399,6 +424,17 @@ export function DiagramEditor({
           </svg>
         </div>
       </div>
+
+      {effectiveDrill && (
+        <div className="diagram-editor-meta-chip">
+          <DrillMetadataPanel
+            drill={effectiveDrill}
+            derived={derived}
+            onPatch={(patch) => setDrillPatch((p) => ({ ...p, ...patch }))}
+            variant="chip"
+          />
+        </div>
+      )}
     </div>
   )
 }

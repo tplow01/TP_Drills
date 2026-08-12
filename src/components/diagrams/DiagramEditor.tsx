@@ -385,7 +385,12 @@ export function DiagramEditor({
             onPointerUp={handleCanvasUp}
           >
             <PitchBackground preset={preset} />
-            <DiagramElements elements={previewElements} selectedId={selectedId} onPointerDownElement={handleElementDown} />
+            <DiagramElements
+              elements={previewElements}
+              selectedId={selectedId}
+              draggingId={dragFrom?.el.id ?? null}
+              onPointerDownElement={handleElementDown}
+            />
           </svg>
         </div>
       </div>

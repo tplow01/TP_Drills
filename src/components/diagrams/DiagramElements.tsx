@@ -70,20 +70,27 @@ function ArrowEl({ el }: { el: DiagramElement }) {
   )
 }
 
+function grabPoint(el: DiagramElement): { cx: number; cy: number } {
+  if (el.x2 === undefined || el.y2 === undefined) return { cx: el.x, cy: el.y }
+  return { cx: (el.x + el.x2) / 2, cy: (el.y + el.y2) / 2 }
+}
+
 /**
  * Renders one diagram's elements as SVG. Shared by every place a diagram
  * shows up — read-only (`DiagramView`) and the editable canvas
  * (`DiagramEditor`) — so the exact same markup that gets saved is what gets
- * displayed everywhere. `selectedId`/`onPointerDownElement` are only passed
- * by the editor; a read-only render omits them.
+ * displayed everywhere. `selectedId`/`draggingId`/`onPointerDownElement` are
+ * only passed by the editor; a read-only render omits them.
  */
 export function DiagramElements({
   elements,
   selectedId,
+  draggingId,
   onPointerDownElement,
 }: {
   elements: DiagramElement[]
   selectedId?: string | null
+  draggingId?: string | null
   onPointerDownElement?: (id: string, e: React.PointerEvent) => void
 }) {
   return (
@@ -97,21 +104,35 @@ export function DiagramElements({
             </marker>
           ))}
       </defs>
-      {elements.map((el) => (
-        <g
-          key={el.id}
-          onPointerDown={onPointerDownElement ? (e) => onPointerDownElement(el.id, e) : undefined}
-          style={{ cursor: onPointerDownElement ? 'pointer' : undefined, filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.35))' }}
-        >
-          {el.kind === 'shape' && <ShapeEl el={el} />}
-          {el.kind === 'equipment' && <EquipmentEl el={el} />}
-          {el.kind === 'player' && <PlayerEl el={el} />}
-          {el.kind === 'arrow' && <ArrowEl el={el} />}
-          {selectedId === el.id && (
-            <circle cx={el.x} cy={el.y} r={22} fill="none" stroke="#2563eb" strokeWidth={2.5} strokeDasharray="4 3" />
-          )}
-        </g>
-      ))}
+      {elements.map((el) => {
+        const isDragging = draggingId === el.id
+        const { cx, cy } = grabPoint(el)
+        return (
+          <g
+            key={el.id}
+            onPointerDown={onPointerDownElement ? (e) => onPointerDownElement(el.id, e) : undefined}
+            transform={isDragging ? `translate(${cx},${cy}) scale(1.05) translate(${-cx},${-cy})` : undefined}
+            style={{
+              cursor: onPointerDownElement ? 'pointer' : undefined,
+              filter: isDragging
+                ? 'drop-shadow(0 3px 6px rgba(0,0,0,0.5))'
+                : 'drop-shadow(0 1px 2px rgba(0,0,0,0.35))',
+            }}
+          >
+            {onPointerDownElement && (() => {
+              const { cx, cy } = grabPoint(el)
+              return <circle cx={cx} cy={cy} r={18} fill="transparent" />
+            })()}
+            {el.kind === 'shape' && <ShapeEl el={el} />}
+            {el.kind === 'equipment' && <EquipmentEl el={el} />}
+            {el.kind === 'player' && <PlayerEl el={el} />}
+            {el.kind === 'arrow' && <ArrowEl el={el} />}
+            {selectedId === el.id && (
+              <circle cx={el.x} cy={el.y} r={22} fill="none" stroke="#2563eb" strokeWidth={2.5} strokeDasharray="4 3" />
+            )}
+          </g>
+        )
+      })}
     </>
   )
 }

@@ -30,7 +30,8 @@ export function DiagramGallery({ drillId, diagrams }: { drillId: string; diagram
     setCreatingStepFor(last.id)
     setStepError(null)
     try {
-      const created = await createDiagramStep(last, diagrams.length)
+      const nextPosition = Math.max(-1, ...diagrams.map((d) => d.position)) + 1
+      const created = await createDiagramStep(last, nextPosition)
       router.push(`/drills/${drillId}/diagrams/${created.id}/edit`)
       router.refresh()
     } catch (e) {

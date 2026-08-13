@@ -275,7 +275,8 @@ a { color: inherit; text-decoration: none; }
   gap: 12px;
   margin-top: 6px;
 }
-.session-view-diagrams-list > svg { flex: none; }
+.session-view-diagrams-list > svg,
+.session-view-diagrams-list > div { flex: none; }
 
 @media print {
   .session-view-diagrams-list { break-inside: avoid; }

@@ -249,8 +249,18 @@ export function DiagramEditor({
       } else {
         await createDiagram({ drill_id: drillId, position, title: title.trim() || null, pitch_preset: preset, elements, sequence_group: null })
       }
-      if (drillMeta && Object.keys(drillPatch).length > 0) {
-        await updateDrill(drillMeta.id, drillPatch)
+      if (drillMeta) {
+        // Seed anything the coach drew but never touched in the sidebar —
+        // otherwise cones/goals/players drawn on the canvas are silently
+        // dropped unless the matching field was explicitly edited (review
+        // finding 2).
+        const seeded: Partial<DrillInput> = {
+          cones_needed: derived.conesNeeded,
+          goals_needed: derived.goalsNeeded,
+          players_min: derived.playerCount || null,
+          ...drillPatch,
+        }
+        await updateDrill(drillMeta.id, seeded)
       }
       router.push(drillMeta ? `/drills/${drillId}/finish` : `/drills/${drillId}`)
       router.refresh()

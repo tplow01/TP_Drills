@@ -119,10 +119,7 @@ export function DiagramElements({
                 : 'drop-shadow(0 1px 2px rgba(0,0,0,0.35))',
             }}
           >
-            {onPointerDownElement && (() => {
-              const { cx, cy } = grabPoint(el)
-              return <circle cx={cx} cy={cy} r={18} fill="transparent" />
-            })()}
+            {onPointerDownElement && <circle cx={cx} cy={cy} r={18} fill="transparent" />}
             {el.kind === 'shape' && <ShapeEl el={el} />}
             {el.kind === 'equipment' && <EquipmentEl el={el} />}
             {el.kind === 'player' && <PlayerEl el={el} />}

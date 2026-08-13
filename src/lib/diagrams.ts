@@ -17,7 +17,7 @@ export async function createDiagram(input: DiagramInput): Promise<Diagram> {
  */
 export async function updateDiagram(
   id: string,
-  patch: { title: string | null; elements: DiagramInput['elements']; sequence_group?: string },
+  patch: { title: string | null; elements: DiagramInput['elements']; sequence_group?: string | null },
 ): Promise<Diagram> {
   const supabase = createBrowserClient()
   const { data, error } = await supabase.from('drill_diagram').update(patch).eq('id', id).select().single()

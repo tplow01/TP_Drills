@@ -31,13 +31,19 @@ export async function getSession(id: string): Promise<SessionWithDrills | null> 
   const supabase = await createServerClient()
   const { data, error } = await supabase
     .from('session')
-    .select('*, drills:session_drill(*, drill:drill(*))')
+    .select('*, team:team_id(id, name), drills:session_drill(*, drill:drill(*))')
     .eq('id', id)
     .order('position', { referencedTable: 'session_drill', ascending: true })
     .maybeSingle()
 
   if (error) throw new Error(`Failed to load session: ${error.message}`)
-  return (data as SessionWithDrills) ?? null
+  if (!data) return null
+
+  type Row = SessionWithDrills & { team: { id: string; name: string } | { id: string; name: string }[] | null }
+  const row = data as Row
+  const team = Array.isArray(row.team) ? (row.team[0] ?? null) : row.team
+
+  return { ...row, team }
 }
 
 /** Server-side. Dated sessions within an inclusive date range, ordered by date then start_time, nulls last. */

@@ -96,7 +96,11 @@ export interface SessionDrillWithDrill extends SessionDrill {
 
 export interface SessionWithDrills extends Session {
   drills: SessionDrillWithDrill[]
+  team: { id: string; name: string } | null
 }
+
+/** Fields a form supplies when creating a team. `calendar_url`/`calendar_synced_at` are set by the calendar-connect flow, not at creation. */
+export type TeamInput = Omit<Team, 'id' | 'created_at' | 'calendar_url' | 'calendar_synced_at'>
 
 export interface DrillStats {
   drill_id: string

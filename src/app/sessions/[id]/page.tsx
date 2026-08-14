@@ -18,7 +18,7 @@ export default async function SessionDetailPage({
   const session = await getSession(id).catch(() => null)
   if (!session) notFound()
 
-  const teamLabel = session.team_id ? session.name : session.name // team name join added in Task 10
+  const teamLabel = session.team?.name ?? session.name
   const metaParts = [
     session.date ? formatShortDate(session.date) : 'No date',
     session.start_time ? formatTime(session.start_time) : null,
@@ -31,7 +31,9 @@ export default async function SessionDetailPage({
       {' · '}
       <Link href={`/sessions/${session.id}/live`} style={{ fontSize: 13, color: 'var(--ink-45)' }}>Pitchside view</Link>
 
-      <h1 style={{ fontSize: 20, marginTop: 10 }}>{teamLabel}</h1>
+      <h1 style={{ fontSize: 20, marginTop: 10 }}>
+        {session.team ? <Link href={`/teams/${session.team.id}`}>{teamLabel}</Link> : teamLabel}
+      </h1>
       <div style={{ fontSize: 11, color: 'var(--ink-45)', marginTop: 4 }}>{metaParts.join(' · ')}</div>
 
       <div style={{ marginTop: 16 }}>

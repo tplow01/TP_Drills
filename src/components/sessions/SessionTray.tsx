@@ -24,8 +24,8 @@ export function SessionTray({
           <h2 style={{ fontSize: 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {session.name}
           </h2>
-          <Button variant="ghost" href={`/planner?session=${session.id}`}>
-            Back to planner →
+          <Button variant="ghost" href={`/sessions/${session.id}`}>
+            Add
           </Button>
         </div>
 

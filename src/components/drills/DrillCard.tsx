@@ -127,7 +127,7 @@ export function DrillCard({
             !showAdd
               ? 'Finish this draft before it can be added to a session'
               : added !== false
-                ? `${drill.name} is drill ${added} in this session — tap to remove`
+                ? `${drill.name} is drill ${added} in this session`
                 : pending
                   ? `Adding ${drill.name}…`
                   : `Add ${drill.name} to session`

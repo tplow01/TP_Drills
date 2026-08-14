@@ -1,27 +1,47 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { getSession } from '@/lib/sessions-server'
-import { diagramsByDrillId } from '@/lib/diagrams-server'
-import { today as todayISO } from '@/lib/dates'
-import { SessionView } from '@/components/sessions/SessionView'
+import { SessionThemePicker } from '@/components/sessions/SessionThemePicker'
+import { SessionBuilder } from '@/components/sessions/SessionBuilder'
+import { formatShortDate, formatTime } from '@/lib/dates'
 
-// Always fresh: this is read live, pitchside, right before or during a
-// session — never served stale.
+// Planning view: this is now the default screen for /sessions/[id]. The
+// pitchside/print SessionView component stays in the codebase (out of scope
+// per the design doc) but has no route pointing at it after this change —
+// the brief's own page code doesn't add a link to it, so none is invented
+// here; wiring it back up is left to whichever later task needs it.
 export const dynamic = 'force-dynamic'
 
-export default async function SessionViewPage({
+export default async function SessionDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>
 }) {
   const { id } = await params
-
-  // getSession throws on a malformed id (not a UUID errors at the database
-  // rather than returning null). A bad id degrades to 404 rather than
-  // crashing the screen — same guard as src/app/drills/page.tsx.
   const session = await getSession(id).catch(() => null)
   if (!session) notFound()
 
-  const diagrams = await diagramsByDrillId(session.drills.map((item) => item.drill_id))
+  const teamLabel = session.team_id ? session.name : session.name // team name join added in Task 10
+  const metaParts = [
+    session.date ? formatShortDate(session.date) : 'No date',
+    session.start_time ? formatTime(session.start_time) : null,
+    `target ${session.target_minutes} min`,
+  ].filter((p): p is string => Boolean(p))
 
-  return <SessionView session={session} today={todayISO()} diagramsByDrillId={diagrams} />
+  return (
+    <main style={{ padding: '16px 18px 32px' }}>
+      <Link href="/sessions" style={{ fontSize: 13, color: 'var(--ink-45)' }}>‹ Sessions</Link>
+
+      <h1 style={{ fontSize: 20, marginTop: 10 }}>{teamLabel}</h1>
+      <div style={{ fontSize: 11, color: 'var(--ink-45)', marginTop: 4 }}>{metaParts.join(' · ')}</div>
+
+      <div style={{ marginTop: 16 }}>
+        <SessionThemePicker sessionId={session.id} library={session.library} initialThemes={session.themes} />
+      </div>
+
+      <div style={{ marginTop: 20 }}>
+        <SessionBuilder session={session} />
+      </div>
+    </main>
+  )
 }

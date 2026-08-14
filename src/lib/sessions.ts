@@ -1,5 +1,5 @@
 import { createBrowserClient } from './supabase/client'
-import type { Session, SessionInput, SessionDrill } from './types'
+import type { Session, SessionInput, SessionDrill, DrillType } from './types'
 
 /**
  * Browser-side writes, safe to import from client components. Server-side
@@ -27,6 +27,13 @@ export async function updateSession(id: string, patch: Partial<SessionInput>): P
     .single()
   if (error) throw new Error(`Failed to update session: ${error.message}`)
   return data as Session
+}
+
+/** Browser-side. Replaces the session's set of themes wholesale. */
+export async function updateSessionThemes(sessionId: string, themes: DrillType[]): Promise<void> {
+  const supabase = createBrowserClient()
+  const { error } = await supabase.from('session').update({ themes }).eq('id', sessionId)
+  if (error) throw new Error(`Failed to update session themes: ${error.message}`)
 }
 
 /** Browser-side. Sessions, unlike drills, may be hard-deleted (spec 9). */

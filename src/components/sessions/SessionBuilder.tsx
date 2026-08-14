@@ -135,8 +135,9 @@ export function SessionBuilder({
 
   return (
     <div style={{ padding: '18px 18px 28px' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 6 }}>
-        <h2 style={{ fontSize: 16 }}>Drills</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+        <div className="lbl">Drills · {session.drills.length}</div>
+        <a href={`/drills?session=${session.id}`} className="header-cta">+ Add drill</a>
       </div>
 
       <div
@@ -190,8 +191,9 @@ export function SessionBuilder({
                 display: 'flex',
                 alignItems: 'center',
                 gap: 10,
+                background: 'var(--card)',
                 border: '1px solid var(--hairline)',
-                borderRadius: 'var(--radius-sm)',
+                borderRadius: 'var(--radius)',
                 padding: '10px 12px',
                 opacity: busyId === item.id ? 0.6 : 1,
               }}

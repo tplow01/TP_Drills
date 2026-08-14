@@ -51,19 +51,24 @@ function PlayerEl({ el }: { el: DiagramElement }) {
   return <circle cx={el.x} cy={el.y} r={r} fill="none" stroke={color} strokeWidth={2.5} />
 }
 
+// 3.5 (up from 2) so arrows read clearly at a glance on the pitchside sheet
+// (diagram editor revamp, 2026-08-13) — the arrowhead marker in DiagramElements'
+// <defs> block is enlarged to match.
+const ARROW_STROKE_WIDTH = 3.5
+
 function ArrowEl({ el }: { el: DiagramElement }) {
   const color = elementColorHex(el.color)
   const x2 = el.x2 ?? el.x
   const y2 = el.y2 ?? el.y
   const markerId = `arrowhead-${el.id}`
   if (el.type === 'arrow-wavy') {
-    return <path d={wavyPath(el.x, el.y, x2, y2)} fill="none" stroke={color} strokeWidth={2} markerEnd={`url(#${markerId})`} />
+    return <path d={wavyPath(el.x, el.y, x2, y2)} fill="none" stroke={color} strokeWidth={ARROW_STROKE_WIDTH} markerEnd={`url(#${markerId})`} />
   }
   return (
     <line
       x1={el.x} y1={el.y} x2={x2} y2={y2}
       stroke={color}
-      strokeWidth={2}
+      strokeWidth={ARROW_STROKE_WIDTH}
       strokeDasharray={el.type === 'arrow-dashed' ? '6 5' : undefined}
       markerEnd={el.type !== 'line-solid' ? `url(#${markerId})` : undefined}
     />
@@ -87,11 +92,16 @@ export function DiagramElements({
   selectedId,
   draggingId,
   onPointerDownElement,
+  onPointerDownHandle,
 }: {
   elements: DiagramElement[]
   selectedId?: string | null
   draggingId?: string | null
   onPointerDownElement?: (id: string, e: React.PointerEvent) => void
+  /** Arrow-endpoint resize handles — editable context only (diagram editor
+      revamp, 2026-08-13). Rendered for the selected arrow when provided;
+      never passed by the read-only DiagramView. */
+  onPointerDownHandle?: (id: string, endpoint: 'start' | 'end', e: React.PointerEvent) => void
 }) {
   return (
     <>
@@ -99,14 +109,16 @@ export function DiagramElements({
         {elements
           .filter((el) => el.kind === 'arrow')
           .map((el) => (
-            <marker key={el.id} id={`arrowhead-${el.id}`} markerWidth={10} markerHeight={10} refX={8} refY={5} orient="auto">
-              <path d="M0,0 L10,5 L0,10 z" fill={elementColorHex(el.color)} />
+            <marker key={el.id} id={`arrowhead-${el.id}`} markerWidth={14} markerHeight={14} refX={11} refY={7} orient="auto">
+              <path d="M0,0 L14,7 L0,14 z" fill={elementColorHex(el.color)} />
             </marker>
           ))}
       </defs>
       {elements.map((el) => {
         const isDragging = draggingId === el.id
         const { cx, cy } = grabPoint(el)
+        const showResizeHandles =
+          onPointerDownHandle && el.kind === 'arrow' && el.id === selectedId && el.x2 !== undefined && el.y2 !== undefined
         return (
           <g
             key={el.id}
@@ -126,6 +138,36 @@ export function DiagramElements({
             {el.kind === 'arrow' && <ArrowEl el={el} />}
             {selectedId === el.id && (
               <circle cx={el.x} cy={el.y} r={22} fill="none" stroke="#2563eb" strokeWidth={2.5} strokeDasharray="4 3" />
+            )}
+            {showResizeHandles && (
+              <>
+                <circle
+                  cx={el.x}
+                  cy={el.y}
+                  r={7}
+                  fill="#2563eb"
+                  stroke="#ffffff"
+                  strokeWidth={2}
+                  style={{ cursor: 'grab' }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation()
+                    onPointerDownHandle(el.id, 'start', e)
+                  }}
+                />
+                <circle
+                  cx={el.x2}
+                  cy={el.y2}
+                  r={7}
+                  fill="#2563eb"
+                  stroke="#ffffff"
+                  strokeWidth={2}
+                  style={{ cursor: 'grab' }}
+                  onPointerDown={(e) => {
+                    e.stopPropagation()
+                    onPointerDownHandle(el.id, 'end', e)
+                  }}
+                />
+              </>
             )}
           </g>
         )

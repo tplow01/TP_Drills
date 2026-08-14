@@ -265,6 +265,31 @@ a { color: inherit; text-decoration: none; }
   .diagram-editor-meta-chip { display: none; }
 }
 
+/* Diagram editor layout (diagram editor revamp, 2026-08-13): stacked
+   full-width canvas + floating tools overlay on phone (canvas scrolls with
+   the page instead of being locked to viewport height); roughly 50/50
+   canvas-vs-tools split on desktop. Same 900px breakpoint as above. */
+.diagram-editor-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+.diagram-editor-canvas-col { flex: none; }
+.diagram-editor-aside { display: flex; flex-direction: column; gap: 16px; }
+.diagram-editor-tools-sidebar { display: none; }
+.diagram-editor-tools-toggle { display: block; }
+.diagram-editor-tools-overlay { display: flex; }
+
+@media (min-width: 900px) {
+  .diagram-editor-layout { flex-direction: row; align-items: flex-start; }
+  .diagram-editor-canvas-col { flex: 1 1 50%; }
+  .diagram-editor-aside { flex: 1 1 50%; }
+  .diagram-editor-tools-sidebar { display: block; }
+  .diagram-editor-tools-toggle { display: none; }
+  .diagram-editor-tools-overlay { display: none; }
+}
+
 /* Session view diagrams (design doc, 2026-08-10): stacked full-width on
    phone/print; allowed to sit side by side when there's room, matching how
    this screen already scales its type and spacing up from the planning

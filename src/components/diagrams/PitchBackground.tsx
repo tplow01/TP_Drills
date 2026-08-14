@@ -1,10 +1,16 @@
 // src/components/diagrams/PitchBackground.tsx
 import type { PitchPreset } from '@/lib/types'
 
+// One shared box for every preset (diagram editor revamp, 2026-08-13) — full/
+// half/grid differ only in what markings render on top of it, not in size,
+// so diagrams are the same size everywhere: editor, gallery, Session view,
+// print. Portrait 16:9.
+const SHARED_DIMENSIONS = { width: 540, height: 960 }
+
 export const PITCH_DIMENSIONS: Record<PitchPreset, { width: number; height: number }> = {
-  full: { width: 520, height: 800 },
-  half: { width: 520, height: 420 },
-  grid: { width: 520, height: 520 },
+  full: SHARED_DIMENSIONS,
+  half: SHARED_DIMENSIONS,
+  grid: SHARED_DIMENSIONS,
 }
 
 const LINE = '#ffffff'

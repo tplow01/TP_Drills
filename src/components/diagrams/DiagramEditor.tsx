@@ -21,10 +21,13 @@ const EQUIPMENT_TOOLS = [
   { type: 'goal-small', label: 'Goal' }, { type: 'ladder', label: 'Ladder' },
   { type: 'pole', label: 'Pole' }, { type: 'wall', label: 'Wall' },
 ]
-const PLAYER_TOOLS = [
-  { type: 'player-circle', label: 'Outline' }, { type: 'player-filled', label: 'Filled' },
-  { type: 'player-triangle', label: 'Triangle' }, { type: 'player-omega', label: 'Omega' },
-]
+// One shape, color-only (diagram editor revamp, 2026-08-13) — placing a
+// player is now the same interaction as placing equipment: pick a color,
+// drag one marker onto the pitch. Older diagrams may still contain the
+// retired 'player-circle'/'player-triangle'/'player-omega' types; those keep
+// rendering correctly (DiagramElements.tsx's PlayerEl), they just can't be
+// placed again from this palette.
+const PLAYER_TOOLS = [{ type: 'player-filled', label: 'Player' }]
 const ARROW_TOOLS = [
   { type: 'arrow-solid', label: 'Solid' }, { type: 'arrow-dashed', label: 'Dashed' },
   { type: 'arrow-wavy', label: 'Wavy' }, { type: 'line-solid', label: 'Line' },
@@ -53,42 +56,31 @@ function ToolIcon({ type }: { type: string }) {
     case 'pole':
     case 'wall':
       return <EquipmentIcon type={type} />
-    case 'player-circle':
-      return <circle cx={12} cy={12} r={7.5} fill="none" stroke={ink} strokeWidth={2.2} />
     case 'player-filled':
       return <circle cx={12} cy={12} r={7.5} fill={ink} />
-    case 'player-triangle':
-      return <polygon points="12,4.5 4.5,19.5 19.5,19.5" fill="none" stroke={ink} strokeWidth={2.2} strokeLinejoin="round" />
-    case 'player-omega':
-      return (
-        <>
-          <circle cx={12} cy={12} r={7.5} fill="none" stroke={ink} strokeWidth={1.4} />
-          <text x={12} y={17} fontSize={13} fontWeight={700} textAnchor="middle" fill={ink}>&#937;</text>
-        </>
-      )
     case 'arrow-solid':
       return (
-        <g stroke={ink} strokeWidth={2.5}>
+        <g stroke={ink} strokeWidth={3.5}>
           <line x1={4} y1={20} x2={18} y2={6} />
           <polygon points="18,4 22,6 18,10" fill={ink} stroke="none" />
         </g>
       )
     case 'arrow-dashed':
       return (
-        <g stroke={ink} strokeWidth={2.5}>
+        <g stroke={ink} strokeWidth={3.5}>
           <line x1={4} y1={20} x2={18} y2={6} strokeDasharray="4 3" />
           <polygon points="18,4 22,6 18,10" fill={ink} stroke="none" />
         </g>
       )
     case 'arrow-wavy':
       return (
-        <g stroke={ink} strokeWidth={2.5} fill="none">
+        <g stroke={ink} strokeWidth={3.5} fill="none">
           <path d="M4,20 Q9,12 12,14 Q15,16 18,6" />
           <polygon points="18,4 22,6 18,10" fill={ink} stroke="none" />
         </g>
       )
     case 'line-solid':
-      return <line x1={4} y1={20} x2={20} y2={4} stroke={ink} strokeWidth={2.5} />
+      return <line x1={4} y1={20} x2={20} y2={4} stroke={ink} strokeWidth={3.5} />
     default:
       return null
   }
@@ -130,6 +122,8 @@ export function DiagramEditor({
   const [draft, setDraft] = useState<DiagramElement | null>(null)
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [dragFrom, setDragFrom] = useState<{ pointerX: number; pointerY: number; el: DiagramElement } | null>(null)
+  const [resizingEndpoint, setResizingEndpoint] = useState<{ id: string; endpoint: 'start' | 'end' } | null>(null)
+  const [toolsOpen, setToolsOpen] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -189,6 +183,18 @@ export function DiagramEditor({
       setDraft({ ...draft, x2: x, y2: y })
       return
     }
+    if (resizingEndpoint) {
+      setElements((els) =>
+        els.map((el) =>
+          el.id === resizingEndpoint.id
+            ? resizingEndpoint.endpoint === 'start'
+              ? { ...el, x, y }
+              : { ...el, x2: x, y2: y }
+            : el,
+        ),
+      )
+      return
+    }
     if (dragFrom) {
       const dx = x - dragFrom.pointerX
       const dy = y - dragFrom.pointerY
@@ -220,6 +226,7 @@ export function DiagramEditor({
       setArmed(null)
     }
     setDragFrom(null)
+    setResizingEndpoint(null)
   }
 
   function handleElementDown(id: string, e: React.PointerEvent) {
@@ -231,6 +238,13 @@ export function DiagramEditor({
     const { x, y } = svgPoint(e.clientX, e.clientY)
     setSelectedId(id)
     setDragFrom({ pointerX: x, pointerY: y, el })
+  }
+
+  function handleHandleDown(id: string, endpoint: 'start' | 'end', e: React.PointerEvent) {
+    if (armed) return
+    svgRef.current?.setPointerCapture(e.pointerId)
+    setSelectedId(id)
+    setResizingEndpoint({ id, endpoint })
   }
 
   function deleteSelected() {
@@ -313,9 +327,89 @@ export function DiagramEditor({
     boxShadow: '0 1px 2px rgba(16,24,40,0.06), 0 1px 3px rgba(16,24,40,0.1)',
   }
 
+  // Shared between the desktop tools sidebar and the mobile tools overlay
+  // (diagram editor revamp, 2026-08-13) — one definition, two places it can
+  // render, so the palette never has to be kept in sync by hand.
+  const toolsPanelContent = (
+    <>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#667085', marginBottom: 10 }}>
+        Color
+      </div>
+      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+        {PALETTE_COLORS.map((c) => (
+          <button
+            key={c}
+            onClick={() => setColor(c)}
+            aria-label={c}
+            style={{
+              width: 32, height: 32, borderRadius: '50%', cursor: 'pointer',
+              border: color === c ? '3px solid #101828' : '1px solid #e4e7ec',
+              boxShadow: color === c ? '0 0 0 2px #ffffff inset' : 'none',
+              background: elementColorHex(c),
+            }}
+          />
+        ))}
+      </div>
+
+      {TOOL_GROUPS.map(([heading, sub, kind, tools]) => (
+        <div key={kind} style={{ marginBottom: 20 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: '#101828' }}>{heading}</div>
+          <div style={{ fontSize: 10, color: '#98a2b3', marginBottom: 8 }}>{sub}</div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+            {tools.map((tool) => {
+              const isArmed = armed?.kind === kind && armed.type === tool.type
+              return (
+                <button
+                  key={tool.type}
+                  onPointerDown={(e) => handlePaletteDown(kind, tool.type, e)}
+                  onPointerMove={handlePaletteMove}
+                  onPointerUp={handlePaletteUp}
+                  title={tool.label}
+                  style={{
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                    padding: '8px 4px', borderRadius: 10, cursor: 'pointer',
+                    border: isArmed ? '2px solid #16a34a' : '1px solid #e4e7ec',
+                    background: isArmed ? '#f0fdf4' : '#f9fafb',
+                  }}
+                >
+                  <svg width={22} height={22} viewBox="0 0 24 24"><ToolIcon type={tool.type} /></svg>
+                  <span style={{ fontSize: 9, fontWeight: 600, color: '#475467', lineHeight: 1.1 }}>{tool.label}</span>
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      ))}
+
+      <button
+        onClick={() => setElements([])}
+        style={{ width: '100%', padding: '10px 0', borderRadius: 10, cursor: 'pointer', background: 'none', border: '1px solid #fecdca', color: '#b42318', fontWeight: 700, fontSize: 12 }}
+      >
+        Clear all
+      </button>
+    </>
+  )
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', background: '#f4f5f7' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', ...cardStyle, borderRadius: 0, borderTop: 'none', borderLeft: 'none', borderRight: 'none' }}>
+    <div style={{ minHeight: '100dvh', background: '#f4f5f7' }}>
+      <div
+        style={{
+          position: 'sticky', top: 0, zIndex: 20, display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px',
+          ...cardStyle, borderRadius: 0, borderTop: 'none', borderLeft: 'none', borderRight: 'none',
+        }}
+      >
+        <button
+          onClick={() => router.push(`/drills/${drillId}`)}
+          aria-label="Back to drill"
+          style={{
+            flex: 'none', width: 38, height: 38, borderRadius: 10, cursor: 'pointer',
+            display: 'grid', placeItems: 'center', background: '#f9fafb', border: '1px solid #e4e7ec', color: '#344054',
+          }}
+        >
+          <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+        </button>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
@@ -345,77 +439,8 @@ export function DiagramEditor({
 
       {error && <div style={{ padding: '10px 18px', fontSize: 12, fontWeight: 600, color: '#b42318', background: '#fef3f2' }}>{error}</div>}
 
-      <div style={{ display: 'flex', flex: 1, minHeight: 0, gap: 16, padding: 16 }}>
-        <div style={{ width: 240, flex: 'none', overflowY: 'auto', padding: 16, ...cardStyle }}>
-          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#667085', marginBottom: 10 }}>
-            Color
-          </div>
-          <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-            {PALETTE_COLORS.map((c) => (
-              <button
-                key={c}
-                onClick={() => setColor(c)}
-                aria-label={c}
-                style={{
-                  width: 32, height: 32, borderRadius: '50%', cursor: 'pointer',
-                  border: color === c ? '3px solid #101828' : '1px solid #e4e7ec',
-                  boxShadow: color === c ? '0 0 0 2px #ffffff inset' : 'none',
-                  background: elementColorHex(c),
-                }}
-              />
-            ))}
-          </div>
-
-          {TOOL_GROUPS.map(([heading, sub, kind, tools]) => (
-            <div key={kind} style={{ marginBottom: 20 }}>
-              <div style={{ fontSize: 12, fontWeight: 700, color: '#101828' }}>{heading}</div>
-              <div style={{ fontSize: 10, color: '#98a2b3', marginBottom: 8 }}>{sub}</div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-                {tools.map((tool) => {
-                  const isArmed = armed?.kind === kind && armed.type === tool.type
-                  return (
-                    <button
-                      key={tool.type}
-                      onPointerDown={(e) => handlePaletteDown(kind, tool.type, e)}
-                      onPointerMove={handlePaletteMove}
-                      onPointerUp={handlePaletteUp}
-                      title={tool.label}
-                      style={{
-                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
-                        padding: '8px 4px', borderRadius: 10, cursor: 'pointer',
-                        border: isArmed ? '2px solid #16a34a' : '1px solid #e4e7ec',
-                        background: isArmed ? '#f0fdf4' : '#f9fafb',
-                      }}
-                    >
-                      <svg width={22} height={22} viewBox="0 0 24 24"><ToolIcon type={tool.type} /></svg>
-                      <span style={{ fontSize: 9, fontWeight: 600, color: '#475467', lineHeight: 1.1 }}>{tool.label}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-
-          <button
-            onClick={() => setElements([])}
-            style={{ width: '100%', padding: '10px 0', borderRadius: 10, cursor: 'pointer', background: 'none', border: '1px solid #fecdca', color: '#b42318', fontWeight: 700, fontSize: 12 }}
-          >
-            Clear all
-          </button>
-        </div>
-
-        {effectiveDrill && (
-          <div className="diagram-editor-meta-sidebar">
-            <DrillMetadataPanel
-              drill={effectiveDrill}
-              derived={derived}
-              onPatch={(patch) => setDrillPatch((p) => ({ ...p, ...patch }))}
-              variant="sidebar"
-            />
-          </div>
-        )}
-
-        <div style={{ flex: 1, display: 'grid', placeItems: 'center', ...cardStyle, padding: 16 }}>
+      <div className="diagram-editor-layout">
+        <div className="diagram-editor-canvas-col" style={{ position: 'relative', ...cardStyle, padding: 16, display: 'grid', placeItems: 'center' }}>
           <svg
             ref={svgRef}
             viewBox={`0 0 ${width} ${height}`}
@@ -430,10 +455,61 @@ export function DiagramEditor({
               selectedId={selectedId}
               draggingId={dragFrom?.el.id ?? null}
               onPointerDownElement={handleElementDown}
+              onPointerDownHandle={handleHandleDown}
             />
           </svg>
+
+          <button
+            onClick={() => setToolsOpen(true)}
+            className="diagram-editor-tools-toggle"
+            style={{
+              position: 'absolute', bottom: 16, right: 16, padding: '10px 18px', borderRadius: 999, cursor: 'pointer',
+              background: '#101828', color: '#ffffff', border: 'none', fontWeight: 700, fontSize: 13,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+            }}
+          >
+            Tools
+          </button>
+        </div>
+
+        <div className="diagram-editor-aside">
+          <div className="diagram-editor-tools-sidebar" style={{ padding: 16, ...cardStyle }}>
+            {toolsPanelContent}
+          </div>
+
+          {effectiveDrill && (
+            <div className="diagram-editor-meta-sidebar">
+              <DrillMetadataPanel
+                drill={effectiveDrill}
+                derived={derived}
+                onPatch={(patch) => setDrillPatch((p) => ({ ...p, ...patch }))}
+                variant="sidebar"
+              />
+            </div>
+          )}
         </div>
       </div>
+
+      {toolsOpen && (
+        <div
+          className="diagram-editor-tools-overlay"
+          onClick={() => setToolsOpen(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', alignItems: 'flex-end', zIndex: 30 }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: '100%', maxHeight: '80dvh', overflowY: 'auto', padding: 20, borderRadius: '18px 18px 0 0', ...cardStyle }}
+          >
+            {toolsPanelContent}
+            <button
+              onClick={() => setToolsOpen(false)}
+              style={{ marginTop: 4, width: '100%', padding: '10px 0', borderRadius: 10, cursor: 'pointer', background: '#101828', color: '#fff', border: 'none', fontWeight: 700, fontSize: 13 }}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
 
       {effectiveDrill && (
         <div className="diagram-editor-meta-chip">

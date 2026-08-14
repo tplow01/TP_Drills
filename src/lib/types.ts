@@ -50,6 +50,8 @@ export interface Team {
   library: Library
   age_band: AgeBand | null
   byga_url: string | null
+  calendar_url: string | null
+  calendar_synced_at: string | null
   created_at: string
 }
 
@@ -64,6 +66,7 @@ export interface Session {
   target_minutes: number
   age_band: AgeBand | null
   session_notes: string | null
+  themes: DrillType[]
   reflected_at: string | null
   created_at: string
   updated_at: string

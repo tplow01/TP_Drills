@@ -68,7 +68,7 @@ export function DrillCard({
           white-paper diagrams reads as consistent shapes. */}
       <div
         style={{
-          background: 'var(--ink)',
+          background: 'var(--mat)',
           borderRadius: 'var(--radius-sm)',
           height: 76,
           display: 'grid',

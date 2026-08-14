@@ -33,6 +33,12 @@ const ARROW_TOOLS = [
   { type: 'arrow-wavy', label: 'Wavy' }, { type: 'line-solid', label: 'Line' },
 ]
 
+const PRESET_OPTIONS: { value: PitchPreset; label: string }[] = [
+  { value: 'full', label: 'Full pitch' },
+  { value: 'half', label: 'Half pitch' },
+  { value: 'grid', label: 'Grid' },
+]
+
 const TOOL_GROUPS = [
   ['Shapes', 'Click + drag', 'shape', SHAPE_TOOLS],
   ['Equipment', 'Drag onto pitch', 'equipment', EQUIPMENT_TOOLS],
@@ -113,7 +119,11 @@ export function DiagramEditor({
   const router = useRouter()
   const svgRef = useRef<SVGSVGElement>(null)
 
-  const [preset, setPreset] = useState<PitchPreset | null>(existing?.pitch_preset ?? null)
+  // No upfront "choose a background" gate (flow revamp, 2026-08-13) — every
+  // preset shares one canvas size now, so there's nothing to lock in before
+  // drawing. Defaults straight to 'full'; switchable anytime via the tools
+  // panel's preset control below.
+  const [preset, setPreset] = useState<PitchPreset>(existing?.pitch_preset ?? 'full')
   const [title, setTitle] = useState(existing?.title ?? '')
   const [elements, setElements] = useState<DiagramElement[]>(existing?.elements ?? [])
   const [drillPatch, setDrillPatch] = useState<Partial<DrillInput>>({})
@@ -136,7 +146,7 @@ export function DiagramEditor({
     const ctm = svg.getScreenCTM()
     if (!ctm) return { x: 0, y: 0 }
     const local = point.matrixTransform(ctm.inverse())
-    const { width, height } = PITCH_DIMENSIONS[preset ?? 'full']
+    const { width, height } = PITCH_DIMENSIONS[preset]
     return { x: clamp(local.x, 0, width), y: clamp(local.y, 0, height) }
   }
 
@@ -254,7 +264,6 @@ export function DiagramEditor({
   }
 
   async function save() {
-    if (!preset) return
     setSaving(true)
     setError(null)
     try {
@@ -287,39 +296,6 @@ export function DiagramEditor({
   const derived = deriveDrillMetadata(elements)
   const effectiveDrill: Drill | null = drillMeta ? { ...drillMeta, ...drillPatch } : null
 
-  if (!preset) {
-    const presetOptions: { value: PitchPreset; label: string; sub: string }[] = [
-      { value: 'full', label: 'Full pitch', sub: 'Both goals, halfway line, centre circle' },
-      { value: 'half', label: 'Half pitch', sub: 'One goal, no halfway line' },
-      { value: 'grid', label: 'Grid, no markings', sub: 'Plain grid — draw your own lines' },
-    ]
-    return (
-      <div style={{ background: '#f4f5f7', minHeight: '100dvh', padding: '40px 24px' }}>
-        <div style={{ maxWidth: 420, margin: '0 auto' }}>
-          <div style={{ fontSize: 12, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#667085', marginBottom: 14 }}>
-            Choose a background
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {presetOptions.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setPreset(opt.value)}
-                style={{
-                  textAlign: 'left', padding: '16px 18px', borderRadius: 14, cursor: 'pointer',
-                  background: '#ffffff', border: '1px solid #e4e7ec',
-                  boxShadow: '0 1px 2px rgba(16,24,40,0.06), 0 1px 3px rgba(16,24,40,0.1)',
-                }}
-              >
-                <div style={{ fontSize: 15, fontWeight: 700, color: '#101828' }}>{opt.label}</div>
-                <div style={{ fontSize: 12, color: '#667085', marginTop: 3 }}>{opt.sub}</div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   const { width, height } = PITCH_DIMENSIONS[preset]
   const previewElements = draft ? [...elements, draft] : elements
   const cardStyle: React.CSSProperties = {
@@ -332,6 +308,26 @@ export function DiagramEditor({
   // render, so the palette never has to be kept in sync by hand.
   const toolsPanelContent = (
     <>
+      <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#667085', marginBottom: 10 }}>
+        Background
+      </div>
+      <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+        {PRESET_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setPreset(opt.value)}
+            style={{
+              padding: '6px 12px', borderRadius: 999, cursor: 'pointer', fontSize: 12, fontWeight: 600,
+              border: preset === opt.value ? '1.5px solid #16a34a' : '1px solid #e4e7ec',
+              background: preset === opt.value ? '#f0fdf4' : '#f9fafb',
+              color: preset === opt.value ? '#16a34a' : '#475467',
+            }}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+
       <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#667085', marginBottom: 10 }}>
         Color
       </div>

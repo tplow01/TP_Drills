@@ -26,7 +26,7 @@ export function DrillCard({
    * what keeps the `+` off every card on an ordinary visit to /drills.
    */
   onAdd?: () => void
-  added?: boolean
+  added?: number | false
   /** True while this drill's add request is in flight — a transient state,
    * not an achievement, so it must not read as accent-orange like `added`. */
   pending?: boolean
@@ -122,12 +122,12 @@ export function DrillCard({
             e.stopPropagation()
             onAdd?.()
           }}
-          disabled={!showAdd || added || pending}
+          disabled={!showAdd || added !== false || pending}
           aria-label={
             !showAdd
               ? 'Finish this draft before it can be added to a session'
-              : added
-                ? `${drill.name} already added`
+              : added !== false
+                ? `${drill.name} is drill ${added} in this session — tap to remove`
                 : pending
                   ? `Adding ${drill.name}…`
                   : `Add ${drill.name} to session`
@@ -149,13 +149,13 @@ export function DrillCard({
             // Pending is transient, not an achievement, so it stays on the
             // quiet chip treatment rather than accent — only the settled
             // "added" checkmark and the live "+" get the stronger states.
-            background: added || pending ? 'var(--chip-bg)' : 'var(--accent)',
-            color: added || pending ? 'var(--ink-45)' : 'var(--ground)',
+            background: added !== false || pending ? 'var(--chip-bg)' : 'var(--accent)',
+            color: added !== false || pending ? 'var(--ink-45)' : 'var(--ground)',
             opacity: !showAdd ? 0.4 : 1,
-            cursor: !showAdd || added || pending ? 'not-allowed' : 'pointer',
+            cursor: !showAdd || added !== false || pending ? 'not-allowed' : 'pointer',
           }}
         >
-          {added ? '✓' : pending ? '…' : '+'}
+          {added !== false ? added : pending ? '…' : '+'}
         </button>
       )}
     </div>

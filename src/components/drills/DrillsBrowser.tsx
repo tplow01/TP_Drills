@@ -60,13 +60,15 @@ export function DrillsBrowser({
   const [addError, setAddError] = useState<string | null>(null)
   const [busyDrillId, setBusyDrillId] = useState<string | null>(null)
 
-  const addedIds = useMemo(
-    () => new Set((session?.drills ?? []).map((d) => d.drill_id)),
+  // Already ordered by position (SessionWithDrills.drills' existing DB
+  // order), so the index doubles as the 1-based badge shown on each card.
+  const addedDrillIds = useMemo(
+    () => (session?.drills ?? []).map((d) => d.drill_id),
     [session],
   )
 
   async function handleAdd(drill: Drill) {
-    if (!session || busyDrillId !== null || addedIds.has(drill.id)) return
+    if (!session || busyDrillId !== null || addedDrillIds.includes(drill.id)) return
     setAddError(null)
     setBusyDrillId(drill.id)
     try {
@@ -93,8 +95,12 @@ export function DrillsBrowser({
     window.history.replaceState(null, '', href)
   }, [query])
 
-  const { library, filter, sortKey, sortDir } = state
+  const { library: stateLibrary, filter, sortKey, sortDir } = state
   const setFilter = (next: DrillFilter) => setState((s) => ({ ...s, filter: next }))
+
+  // A session fixes the pool to its own library — the URL/filter-state
+  // library only applies on an ordinary, session-less visit to /drills.
+  const library = session ? session.library : stateLibrary
 
   const all = library === 'outfield' ? outfield : goalkeeping
 
@@ -159,7 +165,7 @@ export function DrillsBrowser({
         style={{ flex: 1, minWidth: 0, padding: '18px 18px 28px' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-          <Segment value={library} onChange={switchLibrary} />
+          {!session && <Segment value={library} onChange={switchLibrary} />}
           <span style={{ marginLeft: 'auto' }}>
             <Button href={`/drills/new?library=${library}&mode=quick`}>+ Quick add</Button>
           </span>
@@ -229,7 +235,7 @@ export function DrillsBrowser({
           browseState={state}
           emptyState={emptyState}
           onAdd={session ? handleAdd : undefined}
-          addedIds={session ? addedIds : undefined}
+          addedDrillIds={session ? addedDrillIds : undefined}
           pendingId={session ? busyDrillId : undefined}
           stats={stats}
         />

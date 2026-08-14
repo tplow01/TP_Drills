@@ -1,10 +1,7 @@
 import Link from 'next/link'
 import type { Session } from '@/lib/types'
-import type { SessionStatus } from '@/lib/session-status'
 import { formatTime } from '@/lib/dates'
-import { StateTag } from './StateTag'
 
-/** Short weekday for a 'YYYY-MM-DD' date, parsed as a plain calendar date. */
 function weekdayOf(date: string): string {
   const [year, month, day] = date.split('-').map(Number)
   return new Intl.DateTimeFormat('en-GB', { weekday: 'short' }).format(
@@ -18,14 +15,12 @@ function dayOf(date: string): string {
 
 export function SessionRow({
   session,
-  status,
   drillCount,
   plannedMinutes,
   href,
   dimmed = false,
 }: {
   session: Session
-  status: SessionStatus
   drillCount: number
   plannedMinutes?: number
   href: string
@@ -43,42 +38,27 @@ export function SessionRow({
     `${drillCount} drill${drillCount === 1 ? '' : 's'}`,
   ].filter((part): part is string => Boolean(part))
 
+  const needsPlan = drillCount === 0
+
   return (
     <Link
       href={href}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: 16,
-        padding: '14px 4px',
-        borderBottom: '1px solid var(--hairline)',
-        opacity: dimmed ? 0.55 : 1,
-      }}
+      className="session-row"
+      style={{ opacity: dimmed ? 0.6 : 1 }}
     >
       <div style={{ width: 40, flexShrink: 0, textAlign: 'center' }}>
         {session.date ? (
           <>
-            <div className="hl" style={{ fontSize: 20 }}>
-              {dayOf(session.date)}
-            </div>
+            <div className="hl" style={{ fontSize: 20 }}>{dayOf(session.date)}</div>
             <div className="lbl">{weekdayOf(session.date)}</div>
           </>
         ) : (
-          <div className="hl" style={{ fontSize: 20, color: 'var(--ink-30)' }}>
-            —
-          </div>
+          <div className="hl" style={{ fontSize: 20, color: 'var(--ink-30)' }}>—</div>
         )}
       </div>
 
       <div style={{ flex: 1, minWidth: 0 }}>
-        <h4
-          style={{
-            fontSize: 16,
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            whiteSpace: 'nowrap',
-          }}
-        >
+        <h4 style={{ fontSize: 16, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {session.name}
         </h4>
         {metaParts.length > 0 && (
@@ -86,9 +66,12 @@ export function SessionRow({
             {metaParts.join(' · ')}
           </div>
         )}
+        {needsPlan && (
+          <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', marginTop: 5 }}>
+            Needs a plan
+          </div>
+        )}
       </div>
-
-      <StateTag status={status} />
     </Link>
   )
 }

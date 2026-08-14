@@ -51,7 +51,7 @@ export function SessionView({
       <div className="no-print">
         <ScreenHeader
           title={session.name}
-          backHref="/planner"
+          backHref="/sessions"
           backLabel="Planner"
           right={
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

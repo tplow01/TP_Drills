@@ -1,5 +1,5 @@
 import { createServerClient } from './supabase/server'
-import type { Session, SessionWithDrills, DrillStats } from './types'
+import type { Session, SessionWithDrills, DrillStats, Team } from './types'
 
 /**
  * Server-only reads, split out from `./sessions` so that `next/headers`
@@ -92,6 +92,14 @@ export async function plannedMinutesBySession(): Promise<Record<string, number>>
     totals[row.session_id] = (totals[row.session_id] ?? 0) + mins
   }
   return totals
+}
+
+/** Server-side. Every team, alphabetical by name. */
+export async function listTeams(): Promise<Team[]> {
+  const supabase = await createServerClient()
+  const { data, error } = await supabase.from('team').select('*').order('name')
+  if (error) throw new Error(`Failed to list teams: ${error.message}`)
+  return data as Team[]
 }
 
 /** One past reflection entry for a drill, with the session it came from. */

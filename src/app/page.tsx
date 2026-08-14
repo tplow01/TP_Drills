@@ -67,7 +67,6 @@ export default async function Home() {
                   )}
                   <SessionRow
                     session={session}
-                    status={deriveStatus(session, drillCounts[session.id] ?? 0, today)}
                     drillCount={drillCounts[session.id] ?? 0}
                     plannedMinutes={plannedMinutes[session.id] ?? 0}
                     href={`/sessions/${session.id}`}
@@ -85,7 +84,7 @@ export default async function Home() {
         )}
 
         <div style={{ padding: '16px 4px 20px' }}>
-          <Link href="/schedule" className="lbl" style={{ color: 'var(--accent)', fontSize: 12 }}>
+          <Link href="/sessions" className="lbl" style={{ color: 'var(--accent)', fontSize: 12 }}>
             Full schedule →
           </Link>
         </div>
@@ -98,7 +97,7 @@ export default async function Home() {
           detail={`${outfield.length} outfield · ${goalkeeping.length} goalkeeping`}
         />
         <DoorCard
-          href="/planner"
+          href="/sessions"
           title="Planner"
           detail={
             plannerCount === 0 ? 'All sessions planned' : `${plannerCount} session${plannerCount === 1 ? '' : 's'} to plan`

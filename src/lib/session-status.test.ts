@@ -11,7 +11,7 @@ function session(over: Partial<Session> = {}): Session {
     id: 'a', team_id: null, name: 'Lions U10 · Session 3', library: 'outfield',
     date: '2026-08-12', start_time: '17:30:00', location: 'Hyde Park',
     target_minutes: 45, age_band: 'U9-U11', session_notes: null,
-    reflected_at: null, created_at: '', updated_at: '',
+    reflected_at: null, created_at: '', updated_at: '', themes: [],
     ...over,
   }
 }

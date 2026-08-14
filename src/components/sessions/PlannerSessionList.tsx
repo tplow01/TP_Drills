@@ -74,6 +74,7 @@ export function PlannerSessionList({
         target_minutes: 45,
         age_band: null,
         session_notes: null,
+        themes: [],
       })
       setCreating(false)
       setName('')

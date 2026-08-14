@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import localFont from 'next/font/local'
 import { Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
+import { AppNav } from '@/components/nav/AppNav'
 
 const jakarta = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -26,7 +27,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" className={`${jakarta.variable} ${mona.variable}`}>
-      <body>{children}</body>
+      <body>
+        <div className="app-shell">{children}</div>
+        <AppNav />
+      </body>
     </html>
   )
 }

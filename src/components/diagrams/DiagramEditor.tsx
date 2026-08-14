@@ -459,9 +459,15 @@ export function DiagramEditor({
             onClick={() => setToolsOpen(true)}
             className="diagram-editor-tools-toggle"
             style={{
-              position: 'absolute', bottom: 16, right: 16, padding: '10px 18px', borderRadius: 999, cursor: 'pointer',
+              // position: fixed (not absolute) — review finding: absolute
+              // was scoped to the canvas card, so on a tall scrolling
+              // canvas the button sat below the fold until scrolled all
+              // the way down. Fixed pins it to the viewport, matching
+              // DrillMetadataPanel's chip so it's reachable at any scroll
+              // position, same as the intent behind the sticky top bar.
+              position: 'fixed', bottom: 16, right: 16, padding: '10px 18px', borderRadius: 999, cursor: 'pointer',
               background: '#101828', color: '#ffffff', border: 'none', fontWeight: 700, fontSize: 13,
-              boxShadow: '0 4px 12px rgba(0,0,0,0.25)',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.25)', zIndex: 25,
             }}
           >
             Tools

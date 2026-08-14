@@ -5,21 +5,10 @@ import { typeLabel } from '@/lib/taxonomy'
 import type { Drill, DrillStats } from '@/lib/types'
 
 function playersLabel(drill: Drill): string {
-  if (drill.players_min === null) return '—'
+  if (drill.players_min === null) return '— players'
   return drill.players_max === null
-    ? `${drill.players_min}+`
-    : `${drill.players_min}–${drill.players_max}`
-}
-
-/**
- * Spec: a never-used drill says so plainly, not a zero and a blank star.
- * Distinguishes "never used" from "used but never rated" — the view can
- * report times_used > 0 with avg_rating still null.
- */
-function statsLabel(stats: DrillStats | undefined): string {
-  if (!stats || stats.times_used === 0) return 'Never used'
-  const used = `Used ${stats.times_used} time${stats.times_used === 1 ? '' : 's'}`
-  return stats.avg_rating === null ? `${used} · not yet rated` : `${used} · ★ ${stats.avg_rating.toFixed(1)}`
+    ? `${drill.players_min}+ players`
+    : `${drill.players_min}–${drill.players_max} players`
 }
 
 export function DrillCard({
@@ -64,18 +53,16 @@ export function DrillCard({
           padding: 12,
         }}
       >
-      {/* Cream mat: contains the image rather than cropping it, so a grid of
-          white-paper diagrams reads as consistent shapes. */}
       <div
         style={{
           background: 'var(--mat)',
           borderRadius: 'var(--radius-sm)',
-          height: 76,
+          height: 120,
           display: 'grid',
           placeItems: 'center',
           overflow: 'hidden',
           padding: 6,
-          marginBottom: 10,
+          marginBottom: 9,
         }}
       >
         {drill.image_url ? (
@@ -101,27 +88,25 @@ export function DrillCard({
 
       <h3 style={{ fontSize: 14 }}>{drill.name}</h3>
 
-      <div style={{ fontSize: 10, color: 'var(--ink-45)', marginTop: 7 }}>
-        {typeLabel(drill.type)}
-        {drill.age_band && ` · ${drill.age_band}`}
-      </div>
-
-      <div style={{ fontSize: 10, color: 'var(--ink-45)', marginTop: 4 }}>
-        {drill.duration_mins === null ? '— min' : `${drill.duration_mins} min`}
-        {' · '}
-        {playersLabel(drill)}
-        {drill.bibs_needed && ' · bibs'}
-      </div>
-
-      {drill.is_draft && (
-        <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--accent)', marginTop: 7 }}>
+      {drill.is_draft ? (
+        <div style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)', marginTop: 7 }}>
           Draft — needs finishing
         </div>
-      )}
-
-      {!drill.is_draft && (
-        <div style={{ fontSize: 10, color: 'var(--ink-45)', marginTop: 4 }}>
-          {statsLabel(stats)}
+      ) : (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 7, flexWrap: 'wrap' }}>
+          <span style={{ fontSize: 10, fontWeight: 600, color: 'var(--ink)' }}>
+            {drill.library === 'outfield' ? 'Outfield' : 'Goalkeeping'}
+          </span>
+          <span style={{ fontSize: 10, color: 'var(--ink-30)' }}>·</span>
+          <span style={{ fontSize: 10, color: 'var(--ink-45)' }}>{playersLabel(drill)}</span>
+          <span style={{ fontSize: 10, color: 'var(--ink-30)' }}>·</span>
+          <span style={{ fontSize: 10, color: 'var(--ink-45)' }}>
+            {drill.duration_mins === null ? '— min' : `${drill.duration_mins} min`}
+          </span>
+          <span style={{ fontSize: 10, color: 'var(--ink-30)' }}>·</span>
+          <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--accent)' }}>
+            {typeLabel(drill.type)}
+          </span>
         </div>
       )}
       </Link>

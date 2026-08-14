@@ -6,10 +6,7 @@ import { SessionBuilder } from '@/components/sessions/SessionBuilder'
 import { formatShortDate, formatTime } from '@/lib/dates'
 
 // Planning view: this is now the default screen for /sessions/[id]. The
-// pitchside/print SessionView component stays in the codebase (out of scope
-// per the design doc) but has no route pointing at it after this change —
-// the brief's own page code doesn't add a link to it, so none is invented
-// here; wiring it back up is left to whichever later task needs it.
+// pitchside/print SessionView lives at /sessions/[id]/live.
 export const dynamic = 'force-dynamic'
 
 export default async function SessionDetailPage({
@@ -31,6 +28,8 @@ export default async function SessionDetailPage({
   return (
     <main style={{ padding: '16px 18px 32px' }}>
       <Link href="/sessions" style={{ fontSize: 13, color: 'var(--ink-45)' }}>‹ Sessions</Link>
+      {' · '}
+      <Link href={`/sessions/${session.id}/live`} style={{ fontSize: 13, color: 'var(--ink-45)' }}>Pitchside view</Link>
 
       <h1 style={{ fontSize: 20, marginTop: 10 }}>{teamLabel}</h1>
       <div style={{ fontSize: 11, color: 'var(--ink-45)', marginTop: 4 }}>{metaParts.join(' · ')}</div>

@@ -264,10 +264,6 @@ export function SessionBuilder({
         </div>
       )}
 
-      {drills.length > 0 && (
-        <Button variant="secondary" href={`/drills?session=${session.id}`}>+ Add drill</Button>
-      )}
-
       {confirmRemoveId && (
         <div
           style={{

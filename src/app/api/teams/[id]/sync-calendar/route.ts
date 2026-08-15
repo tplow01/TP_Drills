@@ -27,9 +27,21 @@ export async function POST(
     return NextResponse.json({ error: 'No calendar connected for this team' }, { status: 400 })
   }
 
+  const feedUrl = team.calendar_url.replace(/^webcal:\/\//i, 'https://')
+
+  let parsedFeedUrl: URL
+  try {
+    parsedFeedUrl = new URL(feedUrl)
+  } catch {
+    return NextResponse.json({ error: 'Unsupported calendar URL.' }, { status: 400 })
+  }
+  if (parsedFeedUrl.protocol !== 'http:' && parsedFeedUrl.protocol !== 'https:') {
+    return NextResponse.json({ error: 'Unsupported calendar URL.' }, { status: 400 })
+  }
+
   let events: ical.CalendarResponse
   try {
-    events = await ical.async.fromURL(team.calendar_url)
+    events = await ical.async.fromURL(feedUrl)
   } catch {
     return NextResponse.json({ error: 'Could not fetch the calendar feed' }, { status: 502 })
   }
@@ -59,7 +71,9 @@ export async function POST(
     .map((event) => mapIcsEventToSessionInput(event as VEvent, team))
 
   if (newSessions.length > 0) {
-    const { error: insertError } = await supabase.from('session').insert(newSessions)
+    const { error: insertError } = await supabase
+      .from('session')
+      .upsert(newSessions, { onConflict: 'team_id,external_uid', ignoreDuplicates: true })
     if (insertError) {
       return NextResponse.json({ error: `Failed to save sessions: ${insertError.message}` }, { status: 500 })
     }

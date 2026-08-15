@@ -2,17 +2,7 @@
 
 import Link from 'next/link'
 import type { Team } from '@/lib/types'
-
-function href(teamId: string | null, activeView: 'agenda' | 'month', yearMonth: string): string {
-  const params = new URLSearchParams()
-  if (activeView === 'month') {
-    params.set('view', 'month')
-    params.set('month', yearMonth)
-  }
-  if (teamId) params.set('team', teamId)
-  const query = params.toString()
-  return query === '' ? '/sessions' : `/sessions?${query}`
-}
+import { sessionsHref } from '@/lib/schedule-href'
 
 export function TeamFilterChips({
   teams,
@@ -28,7 +18,7 @@ export function TeamFilterChips({
   return (
     <div className="team-chip-row">
       <Link
-        href={href(null, activeView, yearMonth)}
+        href={sessionsHref({ view: activeView, yearMonth, teamId: null })}
         className="team-chip"
         data-selected={selectedTeamId === null ? 'true' : 'false'}
       >
@@ -37,7 +27,7 @@ export function TeamFilterChips({
       {teams.map((team) => (
         <Link
           key={team.id}
-          href={href(team.id, activeView, yearMonth)}
+          href={sessionsHref({ view: activeView, yearMonth, teamId: team.id })}
           className="team-chip"
           data-selected={selectedTeamId === team.id ? 'true' : 'false'}
         >

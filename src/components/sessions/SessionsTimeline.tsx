@@ -76,6 +76,10 @@ export function SessionsTimeline({
   useEffect(() => {
     if (!scrollTarget) return
     document.getElementById(scrollTarget)?.scrollIntoView({ block: 'start' })
+    // Clear after a successful scroll so later, unrelated Past toggles don't
+    // re-trigger this effect and yank the viewport back to the hash target.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setScrollTarget(null)
   }, [scrollTarget, pastOpen])
 
   return (
@@ -85,6 +89,7 @@ export function SessionsTimeline({
           <button
             type="button"
             onClick={() => setPastOpen((open) => !open)}
+            aria-expanded={pastOpen}
             className="lbl"
             style={{
               background: 'none', border: 'none', padding: '16px 4px 2px',

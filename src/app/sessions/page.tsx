@@ -22,11 +22,7 @@ export default async function SessionsPage({
   const today = todayISO()
   const yearMonth = typeof month === 'string' && /^\d{4}-\d{2}$/.test(month) ? month : yearMonthOf(today)
 
-  const [teams, drillCounts, plannedMinutes] = await Promise.all([
-    listTeams(),
-    drillCountsBySession(),
-    plannedMinutesBySession(),
-  ])
+  const teams = await listTeams()
 
   return (
     <main>
@@ -45,7 +41,7 @@ export default async function SessionsPage({
           selectedTeamId={selectedTeamId}
         />
       ) : (
-        <AgendaView selectedTeamId={selectedTeamId} today={today} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
+        <AgendaView selectedTeamId={selectedTeamId} today={today} />
       )}
     </main>
   )
@@ -82,15 +78,15 @@ async function MonthOverviewView({
 async function AgendaView({
   selectedTeamId,
   today,
-  drillCounts,
-  plannedMinutes,
 }: {
   selectedTeamId: string | null
   today: string
-  drillCounts: Record<string, number>
-  plannedMinutes: Record<string, number>
 }) {
-  const allSessions = await listSessions()
+  const [allSessions, drillCounts, plannedMinutes] = await Promise.all([
+    listSessions(),
+    drillCountsBySession(),
+    plannedMinutesBySession(),
+  ])
   const sessions = selectedTeamId
     ? allSessions.filter((s) => s.team_id === selectedTeamId)
     : allSessions

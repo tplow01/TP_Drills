@@ -2,9 +2,9 @@ import type { Session } from './types'
 
 /**
  * Every dated session, grouped by exact calendar date and sorted by start
- * time within each date — the level of detail the coarse Past/Today/
- * Upcoming buckets above don't give you. Dateless sessions are simply
- * absent from the map.
+ * time within each date — finer-grained than the coarse status buckets this
+ * schedule view used to group by. Dateless sessions are simply absent from
+ * the map.
  */
 export function sessionsByDate(sessions: Session[]): Map<string, Session[]> {
   const map = new Map<string, Session[]>()
@@ -39,10 +39,9 @@ export interface SessionSchedule {
  * buckets (spec 2026-08-14: an earlier draft grouped by "Needs a plan /
  * Ready / Reflect" and it was explicitly rejected — reflection isn't a
  * workflow step the coach wants surfaced). Spec 2026-08-15 refines this
- * further: one section per calendar date, not the coarse Past/Today/
- * Upcoming buckets `groupSessionsByDate` used — a date header per day is
- * what lets any number of sessions land on one day without a layout
- * problem.
+ * further: one section per calendar date, not the coarse status buckets
+ * used before — a date header per day is what lets any number of sessions
+ * land on one day without a layout problem.
  */
 export function scheduleSessions(sessions: Session[], today: string): SessionSchedule {
   const byDate = sessionsByDate(sessions)

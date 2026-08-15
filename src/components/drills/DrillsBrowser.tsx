@@ -156,7 +156,7 @@ export function DrillsBrowser({
     )
 
   return (
-    <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+    <div style={{ display: 'flex', alignItems: 'stretch' }}>
       {/* Desktop sidebar */}
       <aside
         className="filter-sidebar"

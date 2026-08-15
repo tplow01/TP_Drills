@@ -473,8 +473,8 @@ a { color: inherit; text-decoration: none; }
   padding: 10px 0;
 }
 .calendar-nav-btn {
-  width: 32px;
-  height: 32px;
+  width: 44px;
+  height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -606,7 +606,7 @@ a { color: inherit; text-decoration: none; }
 .drill-picker-body {
   flex: 1;
   display: flex;
-  align-items: flex-start;
+  align-items: stretch;
   overflow-y: auto;
 }
 .drill-picker-filters {

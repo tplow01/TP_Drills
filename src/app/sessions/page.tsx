@@ -55,7 +55,7 @@ export default async function SessionsPage({
 
   return (
     <main>
-      <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+      <div style={{ display: 'flex', alignItems: 'stretch' }}>
         <aside
           className="filter-sidebar"
           style={{ width: 190, flex: 'none', borderRight: '1px solid var(--hairline)', padding: '14px 18px 28px' }}

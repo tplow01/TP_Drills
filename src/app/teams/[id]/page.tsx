@@ -4,6 +4,7 @@ import { getTeam } from '@/lib/teams-server'
 import { listSessions, drillCountsBySession, plannedMinutesBySession } from '@/lib/sessions-server'
 import { scheduleSessions } from '@/lib/session-groups'
 import { SessionsTimeline } from '@/components/sessions/SessionsTimeline'
+import { CalendarConnect } from '@/components/teams/CalendarConnect'
 import { today as todayISO } from '@/lib/dates'
 
 export const dynamic = 'force-dynamic'
@@ -33,6 +34,9 @@ export default async function TeamPage({
       <div style={{ fontSize: 11, color: 'var(--ink-45)', marginTop: 4 }}>
         {team.library === 'outfield' ? 'Outfield' : 'Goalkeeping'}
         {team.age_band ? ` · ${team.age_band}` : ''}
+      </div>
+      <div style={{ marginTop: 12 }}>
+        <CalendarConnect team={team} />
       </div>
       <div style={{ marginTop: 16 }}>
         <a href={`/sessions/new?team=${team.id}`} className="header-cta">+ Session</a>

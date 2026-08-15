@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { teamColor, teamColorMap } from './team-colors'
+import { TEAM_COLORS, suggestedTeamColor, teamColor, teamColorMap } from './team-colors'
 
 describe('teamColor', () => {
   it('gives distinct colors to the first several indexes', () => {
@@ -26,5 +26,29 @@ describe('teamColorMap', () => {
 
   it('returns an empty map for no teams', () => {
     expect(teamColorMap([]).size).toBe(0)
+  })
+
+  it('a team with an explicit color uses it instead of its index', () => {
+    const map = teamColorMap([{ id: 'a', color: '#ffffff' }, { id: 'b', color: null }])
+    expect(map.get('a')).toBe('#ffffff')
+    expect(map.get('b')).toBe(teamColor(1))
+  })
+})
+
+describe('suggestedTeamColor', () => {
+  it('suggests the first unused palette color', () => {
+    expect(suggestedTeamColor([TEAM_COLORS[0], TEAM_COLORS[1]])).toBe(TEAM_COLORS[2])
+  })
+
+  it('suggests the first color when nothing is used yet', () => {
+    expect(suggestedTeamColor([])).toBe(TEAM_COLORS[0])
+  })
+
+  it('ignores nulls', () => {
+    expect(suggestedTeamColor([null, null])).toBe(TEAM_COLORS[0])
+  })
+
+  it('falls back to the first color once every palette color is taken', () => {
+    expect(suggestedTeamColor([...TEAM_COLORS])).toBe(TEAM_COLORS[0])
   })
 })

@@ -2,7 +2,7 @@ import Link from 'next/link'
 import type { Team } from '@/lib/types'
 import { sessionsHref } from '@/lib/schedule-href'
 import type { ScheduleView } from '@/lib/schedule-href'
-import { teamColor } from '@/lib/team-colors'
+import { teamColorMap } from '@/lib/team-colors'
 
 /**
  * The Schedule sidebar: a key to the schedule's team colors, not a
@@ -30,6 +30,8 @@ export function ScheduleSidebar({
   const teamHref = (teamId: string | null) =>
     sessionsHref({ view: activeView, date, weekStart, yearMonth, teamId })
 
+  const colors = teamColorMap(teams)
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -49,14 +51,14 @@ export function ScheduleSidebar({
             <span className="team-swatch" style={{ background: 'var(--ink-30)' }} aria-hidden="true" />
             All teams
           </Link>
-          {teams.map((team, i) => (
+          {teams.map((team) => (
             <Link
               key={team.id}
               href={teamHref(team.id)}
               className="sidebar-team-link"
               data-selected={selectedTeamId === team.id ? 'true' : 'false'}
             >
-              <span className="team-swatch" style={{ background: teamColor(i) }} aria-hidden="true" />
+              <span className="team-swatch" style={{ background: colors.get(team.id) }} aria-hidden="true" />
               {team.name}
             </Link>
           ))}

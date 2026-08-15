@@ -49,6 +49,7 @@ export interface Team {
   name: string
   library: Library
   age_band: AgeBand | null
+  color: string | null
   byga_url: string | null
   calendar_url: string | null
   calendar_synced_at: string | null

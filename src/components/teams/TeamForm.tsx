@@ -4,13 +4,15 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createTeam } from '@/lib/teams'
 import { AGE_BANDS } from '@/lib/taxonomy'
-import type { AgeBand, Library } from '@/lib/types'
+import { TEAM_COLORS, suggestedTeamColor } from '@/lib/team-colors'
+import type { AgeBand, Library, Team } from '@/lib/types'
 
-export function TeamForm() {
+export function TeamForm({ existingTeams }: { existingTeams: Team[] }) {
   const router = useRouter()
   const [name, setName] = useState('')
   const [library, setLibrary] = useState<Library>('outfield')
   const [ageBand, setAgeBand] = useState<AgeBand | ''>('')
+  const [color, setColor] = useState(() => suggestedTeamColor(existingTeams.map((t) => t.color)))
   const [saving, setSaving] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -21,6 +23,7 @@ export function TeamForm() {
         name,
         library,
         age_band: library === 'outfield' && ageBand !== '' ? ageBand : null,
+        color,
         byga_url: null,
       })
       router.push(`/teams/${team.id}`)
@@ -66,6 +69,25 @@ export function TeamForm() {
           </select>
         </label>
       )}
+
+      <div>
+        <div className="lbl" style={{ marginBottom: 4 }}>Color</div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {TEAM_COLORS.map((c) => (
+            <button
+              key={c}
+              type="button"
+              onClick={() => setColor(c)}
+              aria-label={c}
+              style={{
+                width: 28, height: 28, borderRadius: '50%', cursor: 'pointer',
+                border: color === c ? '2px solid var(--ink)' : '1px solid var(--hairline)',
+                background: c,
+              }}
+            />
+          ))}
+        </div>
+      </div>
 
       <button type="submit" disabled={saving || name.trim() === ''} className="header-cta" style={{ alignSelf: 'flex-start' }}>
         {saving ? 'Creating…' : 'Create team'}

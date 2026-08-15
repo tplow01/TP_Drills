@@ -7,7 +7,7 @@ import type { Team } from '@/lib/types'
 
 export function NewSessionChoice({ teams, defaultTeamId }: { teams: Team[]; defaultTeamId: string | null }) {
   const [mode, setMode] = useState<'choose' | 'manual'>('choose')
-  const defaultTeam = teams.find((t) => t.id === defaultTeamId) ?? teams[0]
+  const defaultTeam = defaultTeamId ? teams.find((t) => t.id === defaultTeamId) : undefined
 
   if (mode === 'manual') {
     return <ManualSessionForm teams={teams} defaultTeamId={defaultTeamId} />

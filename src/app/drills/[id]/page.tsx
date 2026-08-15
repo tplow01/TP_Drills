@@ -50,7 +50,7 @@ export default async function DrillDetailPage({
   ])
   const stats = allStats[drill.id]
   const sessionId = typeof session === 'string' && session !== '' ? session : null
-  const backHref = sessionId ? `/planner?session=${sessionId}` : backToDrillsHref(back)
+  const backHref = sessionId ? `/sessions/${sessionId}` : backToDrillsHref(back)
   const backLabel = sessionId ? 'Session' : 'Drills'
 
   return (

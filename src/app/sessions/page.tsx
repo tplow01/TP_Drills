@@ -32,7 +32,8 @@ export default async function SessionsPage({
 
   return (
     <main>
-      <div style={{ padding: '14px 18px 0', display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ padding: '14px 18px 0', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <Link href="/teams/new" className="header-cta" data-variant="secondary">+ Team</Link>
         <Link href="/sessions/new" className="header-cta">+ Session</Link>
       </div>
       <TeamFilterChips teams={teams} selectedTeamId={selectedTeamId} />

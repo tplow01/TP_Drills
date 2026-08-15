@@ -13,7 +13,7 @@ function newSessionHref(date: string, teamId: string | null): string {
   return `/sessions/new?${params.toString()}`
 }
 
-/** Month glance-and-jump (spec 2026-08-15): a dot per day with anything scheduled, tap to jump into the agenda at that date. */
+/** Month glance-and-jump (spec 2026-08-15): a dot per day with anything scheduled, tap to jump into Day view for that date. */
 export function MonthOverview({
   yearMonth,
   sessions,
@@ -55,7 +55,7 @@ export function MonthOverview({
             inMonth={inMonth}
             isToday={date === today}
             hasSessions={byDate.has(date)}
-            agendaHref={sessionsHref({ view: 'agenda', yearMonth, teamId: selectedTeamId, dateAnchor: date })}
+            dayHref={sessionsHref({ view: 'day', date, teamId: selectedTeamId })}
             newSessionHref={newSessionHref(date, selectedTeamId)}
           />
         ))}

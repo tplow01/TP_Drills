@@ -1,28 +1,30 @@
+export type ScheduleView = 'day' | 'week' | 'month'
+
 export interface ScheduleHrefParams {
-  view?: 'agenda' | 'month'
+  view: ScheduleView
+  /** Day view's date — omit to mean "today" (the default, so a bare Day link stays clean). */
+  date?: string
+  /** Week view's Monday — omit to mean "this week". */
+  weekStart?: string
+  /** Month view's year-month — omit to mean "this month". */
   yearMonth?: string
   teamId?: string | null
-  dateAnchor?: string
 }
 
 /**
- * Builds a /sessions URL preserving view/month/team state consistently —
- * one function so every link (view toggle, team chips, month-day jump)
- * agrees on when `view`/`month` appear, instead of three near-identical
- * hand-rolled builders drifting apart (e.g. the month-jump link used to
- * silently drop `month`, landing back on the current month instead of
- * whichever month you were viewing).
+ * Builds a /sessions URL — one function so every link (view toggle, day/week
+ * nav, month-day tap) agrees on which params belong to which view, instead
+ * of several near-identical hand-rolled builders drifting apart (spec
+ * 2026-08-15: an earlier version of this file had exactly that drift, where
+ * the month-day jump link silently dropped `month`).
  */
-export function sessionsHref({ view, yearMonth, teamId, dateAnchor }: ScheduleHrefParams): string {
+export function sessionsHref({ view, date, weekStart, yearMonth, teamId }: ScheduleHrefParams): string {
   const params = new URLSearchParams()
-  if (view === 'month') params.set('view', 'month')
-  // Carry `month` whenever it targets month view, OR when jumping to a
-  // specific date's agenda section — so tapping a date from a non-current
-  // month and later returning to Month view lands back on that month
-  // instead of falling back to the current one.
-  if ((view === 'month' || dateAnchor) && yearMonth) params.set('month', yearMonth)
+  if (view !== 'day') params.set('view', view)
+  if (view === 'day' && date) params.set('date', date)
+  if (view === 'week' && weekStart) params.set('week', weekStart)
+  if (view === 'month' && yearMonth) params.set('month', yearMonth)
   if (teamId) params.set('team', teamId)
   const query = params.toString()
-  const base = query ? `/sessions?${query}` : '/sessions'
-  return dateAnchor ? `${base}#date-${dateAnchor}` : base
+  return query ? `/sessions?${query}` : '/sessions'
 }

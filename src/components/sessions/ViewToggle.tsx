@@ -1,21 +1,27 @@
 import Link from 'next/link'
 import { sessionsHref } from '@/lib/schedule-href'
+import type { ScheduleView } from '@/lib/schedule-href'
 
 /**
- * Month/Agenda switch. Plain `<Link>`s, not the Library `Segment` component
+ * Day/Week/Month switch. Plain `<Link>`s, not the Library `Segment` component
  * (that one's typed to `Library`) — same pill-tablist visual language.
  */
 export function ViewToggle({
   activeView,
+  date,
+  weekStart,
   yearMonth,
   selectedTeamId,
 }: {
-  activeView: 'month' | 'agenda'
+  activeView: ScheduleView
+  date: string
+  weekStart: string
   yearMonth: string
   selectedTeamId: string | null
 }) {
-  const options: { key: 'month' | 'agenda'; label: string }[] = [
-    { key: 'agenda', label: 'Agenda' },
+  const options: { key: ScheduleView; label: string }[] = [
+    { key: 'day', label: 'Day' },
+    { key: 'week', label: 'Week' },
     { key: 'month', label: 'Month' },
   ]
   return (
@@ -23,7 +29,7 @@ export function ViewToggle({
       {options.map((option) => (
         <Link
           key={option.key}
-          href={sessionsHref({ view: option.key, yearMonth, teamId: selectedTeamId })}
+          href={sessionsHref({ view: option.key, date, weekStart, yearMonth, teamId: selectedTeamId })}
           role="tab"
           aria-selected={activeView === option.key}
           className="view-toggle-tab"

@@ -13,7 +13,7 @@ export function MonthDayDot({
   inMonth,
   isToday,
   hasSessions,
-  agendaHref,
+  dayHref,
   newSessionHref,
 }: {
   date: string
@@ -21,12 +21,12 @@ export function MonthDayDot({
   inMonth: boolean
   isToday: boolean
   hasSessions: boolean
-  agendaHref: string
+  dayHref: string
   newSessionHref: string
 }) {
   return (
     <Link
-      href={hasSessions ? agendaHref : newSessionHref}
+      href={hasSessions ? dayHref : newSessionHref}
       className="month-day-cell"
       data-in-month={inMonth ? 'true' : 'false'}
       data-today={isToday ? 'true' : 'false'}

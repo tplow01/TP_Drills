@@ -1,49 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import type { Session } from '@/lib/types'
 import type { SessionSchedule } from '@/lib/session-groups'
 import { formatDayMarker, formatLongDate } from '@/lib/dates'
-import { SessionRow } from './SessionRow'
-
-function DateSection({
-  id,
-  label,
-  sessions,
-  dimmed = false,
-  drillCounts,
-  plannedMinutes,
-}: {
-  id?: string
-  label: string
-  sessions: Session[]
-  dimmed?: boolean
-  drillCounts: Record<string, number>
-  plannedMinutes: Record<string, number>
-}) {
-  if (sessions.length === 0) return null
-  return (
-    <section id={id} style={{ marginBottom: 8, scrollMarginTop: 16 }}>
-      <div className="lbl" style={{ margin: '16px 4px 2px' }}>{label}</div>
-      {sessions.map((session) => (
-        <SessionRow
-          key={session.id}
-          session={session}
-          drillCount={drillCounts[session.id] ?? 0}
-          plannedMinutes={plannedMinutes[session.id]}
-          href={`/sessions/${session.id}`}
-          dimmed={dimmed}
-        />
-      ))}
-    </section>
-  )
-}
+import { DateSection } from './DateSection'
 
 /**
- * The Schedule's default view: today first, then one section per upcoming
+ * A team's full schedule: today first, then one section per upcoming
  * calendar date (any number of sessions per date, no layout constraint from
- * the grouping), Past collapsed, Unscheduled last. Replaces the old coarse
- * Past/Today/Upcoming/Unscheduled bucket view (spec 2026-08-15).
+ * the grouping), Past collapsed, Unscheduled last. Used on a team's own
+ * page — the main Schedule screen (/sessions) uses Day/Week/Month instead
+ * (spec 2026-08-15).
  */
 export function SessionsTimeline({
   schedule,
@@ -115,24 +82,14 @@ export function SessionsTimeline({
         </section>
       )}
 
-      <section id={schedule.todayGroup ? `date-${schedule.todayGroup.date}` : undefined} style={{ marginBottom: 8, scrollMarginTop: 16 }}>
-        <div className="lbl" style={{ margin: '16px 4px 2px' }}>Today · {formatLongDate(today)}</div>
-        {schedule.todayGroup ? (
-          schedule.todayGroup.sessions.map((session) => (
-            <SessionRow
-              key={session.id}
-              session={session}
-              drillCount={drillCounts[session.id] ?? 0}
-              plannedMinutes={plannedMinutes[session.id]}
-              href={`/sessions/${session.id}`}
-            />
-          ))
-        ) : (
-          <div className="bd" style={{ fontSize: 13, color: 'var(--ink-45)', padding: '4px 4px 8px' }}>
-            Nothing planned today.
-          </div>
-        )}
-      </section>
+      <DateSection
+        id={schedule.todayGroup ? `date-${schedule.todayGroup.date}` : undefined}
+        label={`Today · ${formatLongDate(today)}`}
+        sessions={schedule.todayGroup?.sessions ?? []}
+        emptyLabel="Nothing planned today."
+        drillCounts={drillCounts}
+        plannedMinutes={plannedMinutes}
+      />
 
       {schedule.upcomingGroups.map((group) => (
         <DateSection

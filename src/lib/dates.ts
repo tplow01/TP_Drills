@@ -84,6 +84,40 @@ export function yearMonthOf(iso: string): string {
   return iso.slice(0, 7)
 }
 
+/** The Monday of the Mon-first week containing `iso`. */
+export function startOfWeek(iso: string): string {
+  const [y, m, d] = iso.split('-').map(Number)
+  const date = new Date(y, m - 1, d)
+  const offset = (date.getDay() + 6) % 7 // 0=Mon..6=Sun
+  return isoPlusDays(iso, -offset)
+}
+
+/** The 7 consecutive dates of the Mon-first week starting at `weekStart`. */
+export function weekDates(weekStart: string): string[] {
+  return Array.from({ length: 7 }, (_, i) => isoPlusDays(weekStart, i))
+}
+
+/** `weekStart` (a Monday) plus `weeks` (may be negative), as 'YYYY-MM-DD'. */
+export function isoPlusWeeks(weekStart: string, weeks: number): string {
+  return isoPlusDays(weekStart, weeks * 7)
+}
+
+/** A week's date range for its nav header, e.g. "11 – 17 Aug 2026" or "28 Jul – 3 Aug 2026". */
+export function formatWeekRangeLabel(weekStart: string): string {
+  const weekEnd = isoPlusDays(weekStart, 6)
+  const [sy, sm, sd] = weekStart.split('-').map(Number)
+  const [ey, em, ed] = weekEnd.split('-').map(Number)
+  const start = new Date(sy, sm - 1, sd)
+  const end = new Date(ey, em - 1, ed)
+  const sameMonth = sy === ey && sm === em
+  const startLabel = new Intl.DateTimeFormat('en-GB', {
+    day: 'numeric',
+    month: sameMonth ? undefined : 'short',
+  }).format(start)
+  const endLabel = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }).format(end)
+  return `${startLabel} – ${endLabel}`
+}
+
 /**
  * Full weeks (Mon-first) covering every day of `yearMonth`, so the grid has
  * no partial rows. Each day carries `inMonth` for dimming the lead/trail days

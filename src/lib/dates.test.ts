@@ -5,9 +5,13 @@ import {
   formatMonthLabel,
   formatShortDate,
   formatTime,
+  formatWeekRangeLabel,
   isoPlusDays,
+  isoPlusWeeks,
   monthGrid,
+  startOfWeek,
   today,
+  weekDates,
   yearMonthOf,
   yearMonthPlusMonths,
 } from './dates'
@@ -101,6 +105,57 @@ describe('yearMonthPlusMonths', () => {
 describe('yearMonthOf', () => {
   it('extracts the year-month prefix', () => {
     expect(yearMonthOf('2026-08-14')).toBe('2026-08')
+  })
+})
+
+describe('startOfWeek', () => {
+  it('returns the same date when it is already a Monday', () => {
+    // 2026-08-10 is a Monday.
+    expect(startOfWeek('2026-08-10')).toBe('2026-08-10')
+  })
+
+  it('rolls back to the Monday of the current week', () => {
+    // 2026-08-15 is a Saturday.
+    expect(startOfWeek('2026-08-15')).toBe('2026-08-10')
+  })
+
+  it('rolls back over a month boundary', () => {
+    // 2026-08-01 is a Saturday; its week's Monday is in July.
+    expect(startOfWeek('2026-08-01')).toBe('2026-07-27')
+  })
+
+  it('treats Sunday as the last day of its week', () => {
+    // 2026-08-09 is a Sunday, in the week starting 2026-08-03.
+    expect(startOfWeek('2026-08-09')).toBe('2026-08-03')
+  })
+})
+
+describe('weekDates', () => {
+  it('returns 7 consecutive dates starting at weekStart', () => {
+    expect(weekDates('2026-08-10')).toEqual([
+      '2026-08-10', '2026-08-11', '2026-08-12', '2026-08-13',
+      '2026-08-14', '2026-08-15', '2026-08-16',
+    ])
+  })
+})
+
+describe('isoPlusWeeks', () => {
+  it('adds whole weeks', () => {
+    expect(isoPlusWeeks('2026-08-10', 1)).toBe('2026-08-17')
+  })
+
+  it('supports negative offsets', () => {
+    expect(isoPlusWeeks('2026-08-10', -1)).toBe('2026-08-03')
+  })
+})
+
+describe('formatWeekRangeLabel', () => {
+  it('formats a week spanning one month without repeating it', () => {
+    expect(formatWeekRangeLabel('2026-08-10')).toBe('10 – 16 Aug 2026')
+  })
+
+  it('formats a week spanning two months with both named', () => {
+    expect(formatWeekRangeLabel('2026-07-27')).toBe('27 Jul – 2 Aug 2026')
   })
 })
 

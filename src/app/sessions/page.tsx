@@ -4,6 +4,7 @@ import { WeekView } from '@/components/sessions/WeekView'
 import { MonthOverview } from '@/components/sessions/MonthOverview'
 import { ViewToggle } from '@/components/sessions/ViewToggle'
 import { ScheduleSidebar } from '@/components/sessions/ScheduleSidebar'
+import { ScheduleMobileTeamsTrigger } from '@/components/sessions/ScheduleMobileTeamsTrigger'
 import type { ScheduleView } from '@/lib/schedule-href'
 import {
   drillCountsBySession, listSessions, listSessionsInWindow, listTeams, plannedMinutesBySession,
@@ -41,6 +42,17 @@ export default async function SessionsPage({
   const teams = await listTeams()
   const teamColors = teamColorMap(teams)
 
+  const sidebarContent = (
+    <ScheduleSidebar
+      activeView={activeView}
+      date={date}
+      weekStart={weekStart}
+      yearMonth={yearMonth}
+      teams={teams}
+      selectedTeamId={selectedTeamId}
+    />
+  )
+
   return (
     <main>
       <div style={{ display: 'flex', alignItems: 'flex-start' }}>
@@ -48,14 +60,7 @@ export default async function SessionsPage({
           className="filter-sidebar"
           style={{ width: 190, flex: 'none', borderRight: '1px solid var(--hairline)', padding: '14px 18px 28px' }}
         >
-          <ScheduleSidebar
-            activeView={activeView}
-            date={date}
-            weekStart={weekStart}
-            yearMonth={yearMonth}
-            teams={teams}
-            selectedTeamId={selectedTeamId}
-          />
+          {sidebarContent}
         </aside>
 
         <div style={{ flex: 1, minWidth: 0, padding: '14px 18px 28px' }}>
@@ -67,11 +72,10 @@ export default async function SessionsPage({
               yearMonth={yearMonth}
               selectedTeamId={selectedTeamId}
             />
-            <div style={{ display: 'flex', gap: 8 }}>
-              <Link href="/teams/new" className="header-cta" data-variant="secondary">+ Team</Link>
-              <Link href="/sessions/new" className="header-cta">+ Session</Link>
-            </div>
+            <Link href="/sessions/new" className="header-cta">+ Session</Link>
           </div>
+
+          <ScheduleMobileTeamsTrigger>{sidebarContent}</ScheduleMobileTeamsTrigger>
 
           {activeView === 'month' ? (
             <MonthOverviewView yearMonth={yearMonth} today={today} selectedTeamId={selectedTeamId} teamColors={teamColors} />

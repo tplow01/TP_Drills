@@ -8,7 +8,9 @@ import { teamColor } from '@/lib/team-colors'
  * The Schedule sidebar: a key to the schedule's team colors, not a
  * calendar — each team's swatch is the same color used on its session rows
  * and month dots, so the list doubles as a legend for what's on screen
- * (spec 2026-08-15). Clicking a team filters the schedule to it.
+ * (spec 2026-08-15). Clicking a team filters the schedule to it. "+ Team"
+ * lives here rather than the header — it's a team action, and this is where
+ * teams live.
  */
 export function ScheduleSidebar({
   activeView,
@@ -30,14 +32,16 @@ export function ScheduleSidebar({
 
   return (
     <div>
-      <div className="lbl" style={{ marginBottom: 8 }}>Teams</div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+        <div className="lbl">Teams</div>
+        <Link href="/teams/new" className="bd" style={{ fontSize: 11, fontWeight: 700, color: 'var(--accent)' }}>
+          + Team
+        </Link>
+      </div>
 
       {teams.length === 0 ? (
-        <div className="bd" style={{ fontSize: 12, color: 'var(--ink-45)', lineHeight: 1.5 }}>
-          No teams yet.{' '}
-          <Link href="/teams/new" style={{ color: 'var(--accent)', fontWeight: 700 }}>
-            + Add one
-          </Link>
+        <div className="bd" style={{ fontSize: 12, color: 'var(--ink-45)' }}>
+          No teams yet.
         </div>
       ) : (
         <>

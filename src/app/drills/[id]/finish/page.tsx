@@ -19,7 +19,7 @@ export default async function FinishDrillPage({ params }: { params: Promise<{ id
   return (
     <main>
       <ScreenHeader title={`Finish · ${drill.name}`} backHref={`/drills/${id}`} backLabel={drill.name} />
-      <DrillForm library={drill.library} initial={drill} mode="full" />
+      <DrillForm library={drill.library} initial={drill} />
     </main>
   )
 }

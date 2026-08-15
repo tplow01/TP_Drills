@@ -47,14 +47,11 @@ function emptyInput(library: Library): DrillInput {
 export function DrillForm({
   library,
   initial,
-  mode,
 }: {
   library: Library
   initial: Drill | null
-  mode: 'quick' | 'full'
 }) {
   const router = useRouter()
-  const [full, setFull] = useState(mode === 'full')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -121,27 +118,7 @@ export function DrillForm({
         </Field>
       </div>
 
-      {!full && (
-        <>
-          <div style={{ marginBottom: 15 }}>
-            <PointListField
-              label="Notes — tidy it up later"
-              values={draft.setup}
-              onChange={(v) => set('setup', v)}
-              addLabel="+ Add another note"
-              placeholder={() => 'Anything you want to remember. This lands in Setup.'}
-            />
-          </div>
-          <div style={{ marginBottom: 18 }}>
-            <Button variant="ghost" onClick={() => setFull(true)}>
-              Add the full details now →
-            </Button>
-          </div>
-        </>
-      )}
-
-      {full && (
-        <>
+      <>
           {draft.library === 'outfield' ? (
             <div style={{ marginBottom: 15 }}>
               <Field label="Age band">
@@ -287,7 +264,6 @@ export function DrillForm({
             <PhotoField value={draft.image_url} onChange={(url) => set('image_url', url)} />
           </div>
         </>
-      )}
 
       {invalid.length > 0 && (
         <div style={{ border: '1px solid var(--accent-border)', borderRadius: 'var(--radius)', padding: 12, marginBottom: 15 }}>

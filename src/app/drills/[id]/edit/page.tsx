@@ -17,8 +17,7 @@ export default async function EditDrillPage({
   return (
     <main>
       <ScreenHeader title={`Edit ${drill.name}`} backHref={`/drills/${drill.id}`} backLabel="Back" />
-      {/* Editing always opens in full mode: quick add is for capture only. */}
-      <DrillForm library={drill.library} initial={drill} mode="full" />
+      <DrillForm library={drill.library} initial={drill} />
     </main>
   )
 }

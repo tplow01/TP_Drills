@@ -172,8 +172,8 @@ export function DrillsBrowser({
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           {!session && <Segment value={library} onChange={switchLibrary} />}
           <span style={{ marginLeft: 'auto' }}>
-            <Link href={`/drills/new?library=${library}&mode=quick`} className="header-cta">
-              + Quick add
+            <Link href={`/drills/new?library=${library}`} className="header-cta">
+              + Add drill
             </Link>
           </span>
         </div>

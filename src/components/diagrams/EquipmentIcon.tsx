@@ -49,7 +49,7 @@ export function EquipmentIcon({ type }: { type: string }) {
           <path
             d="M4,20 L4,6.5 L20,6.5 L20,20"
             fill="none"
-            stroke="#101828"
+            stroke="#f2f4f6"
             strokeWidth={2.6}
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -75,7 +75,7 @@ export function EquipmentIcon({ type }: { type: string }) {
     case 'pole':
       return (
         <>
-          <line x1="7.5" y1="3" x2="7.5" y2="21" stroke="#101828" strokeWidth={1.8} strokeLinecap="round" />
+          <line x1="7.5" y1="3" x2="7.5" y2="21" stroke="#f2f4f6" strokeWidth={1.8} strokeLinecap="round" />
           <polygon points="8.3,4.2 15.5,6.6 8.3,9" fill="#dc2626" stroke="#a51c1c" strokeWidth={0.4} strokeLinejoin="round" />
         </>
       )

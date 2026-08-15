@@ -509,91 +509,58 @@ a { color: inherit; text-decoration: none; }
   gap: 4px;
 }
 
-.calendar-day-cell {
-  min-height: 88px;
+/* Month overview: dot-only day cells (spec 2026-08-15 — a cell never
+   renders session text, so a day with any number of sessions looks
+   identical to a day with one; that's what removes the stacking problem,
+   not a layout trick). */
+.month-day-cell {
+  min-height: 64px;
   min-width: 0;
-  padding: 6px;
   border-radius: var(--radius-sm);
   background: var(--card);
   border: 1px solid var(--hairline);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  overflow: hidden;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
-.calendar-day-cell[data-in-month="false"] { opacity: 0.4; }
-.calendar-day-cell[data-today="true"] { border-color: var(--accent); }
-
-/* Empty-day cells are themselves the tap target (see CalendarDayCell). */
-.calendar-day-cell-empty { cursor: pointer; }
-.calendar-day-cell-empty:hover, .calendar-day-cell-empty:focus-visible {
+.month-day-cell[data-in-month="false"] { opacity: 0.4; }
+.month-day-cell[data-today="true"] { border-color: var(--accent); }
+.month-day-cell:hover, .month-day-cell:focus-visible {
   border-color: var(--accent);
   background: var(--chip-bg);
 }
 
-.calendar-day-number { font-size: 12px; font-weight: 700; color: var(--ink-45); }
-.calendar-day-cell[data-today="true"] .calendar-day-number { color: var(--accent); }
+.month-day-number { font-size: 13px; font-weight: 700; color: var(--ink-45); }
+.month-day-cell[data-today="true"] .month-day-number { color: var(--accent); }
 
-.calendar-session-chip {
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-  min-width: 0;
-  padding: 4px 6px;
-  border-radius: 6px;
-  background: var(--accent-tint);
-  border: 1px solid var(--accent-border);
+.month-day-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--accent);
 }
-.calendar-session-chip[data-needs-plan="true"] {
-  background: none;
-  border: 1px dashed var(--hairline);
-}
-.calendar-session-chip-name {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--ink);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.calendar-session-chip-time { font-size: 10px; color: var(--ink-45); }
-.calendar-session-chip-flag { font-size: 9px; font-weight: 700; color: var(--accent); }
 
-.calendar-day-add {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 36px;
-  border-radius: 6px;
-  color: var(--ink-30);
-  font-size: 16px;
-}
-.calendar-day-add:hover { color: var(--accent); background: var(--chip-bg); }
-
-/* Phone: tighter cells, whole cell is the tap target (hover "+" doesn't
-   translate to touch), so make the add affordance fill the cell. */
 @media (max-width: 480px) {
   .calendar { padding-left: 6px !important; padding-right: 6px !important; }
   .calendar-weekday-row, .calendar-grid { gap: 2px; }
-  .calendar-day-cell { min-height: 64px; padding: 3px; gap: 2px; }
-  .calendar-day-number { font-size: 10px; }
-  .calendar-session-chip { padding: 3px 4px; }
-  .calendar-session-chip-name { font-size: 9px; }
-  .calendar-session-chip-time, .calendar-session-chip-flag { display: none; }
-  .calendar-day-add { min-height: unset; }
+  .month-day-cell { min-height: 44px; gap: 4px; }
+  .month-day-number { font-size: 11px; }
+  .month-day-dot { width: 5px; height: 5px; }
   .calendar-nav { gap: 10px; }
   .calendar-month-label { font-size: 14px; min-width: unset; }
 }
 
-.calendar-skeleton-cell {
-  min-height: 88px;
+.month-day-skeleton {
+  min-height: 64px;
   border-radius: var(--radius-sm);
   background: var(--card);
   border: 1px solid var(--hairline);
+  opacity: 0.5;
 }
 @media (max-width: 480px) {
-  .calendar-skeleton-cell { min-height: 64px; }
+  .month-day-skeleton { min-height: 44px; }
 }
 
 /* Inline drill picker: a slide-over on top of the Planner (spec 2026-08-14

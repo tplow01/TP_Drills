@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { TeamFilterChips } from '@/components/sessions/TeamFilterChips'
 import { SessionsTimeline } from '@/components/sessions/SessionsTimeline'
-import { SessionsCalendar } from '@/components/sessions/SessionsCalendar'
+import { MonthOverview } from '@/components/sessions/MonthOverview'
 import { ViewToggle } from '@/components/sessions/ViewToggle'
 import {
   drillCountsBySession, listSessions, listSessionsInWindow, listTeams, plannedMinutesBySession,
@@ -39,11 +39,10 @@ export default async function SessionsPage({
       </div>
       <TeamFilterChips teams={teams} selectedTeamId={selectedTeamId} />
       {activeView === 'month' ? (
-        <CalendarView
+        <MonthOverviewView
           yearMonth={yearMonth}
           today={today}
           selectedTeamId={selectedTeamId}
-          drillCounts={drillCounts}
         />
       ) : (
         <AgendaView selectedTeamId={selectedTeamId} today={today} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
@@ -52,16 +51,14 @@ export default async function SessionsPage({
   )
 }
 
-async function CalendarView({
+async function MonthOverviewView({
   yearMonth,
   today,
   selectedTeamId,
-  drillCounts,
 }: {
   yearMonth: string
   today: string
   selectedTeamId: string | null
-  drillCounts: Record<string, number>
 }) {
   const weeks = monthGrid(yearMonth)
   const from = weeks[0][0].date
@@ -73,20 +70,12 @@ async function CalendarView({
     : allSessions
 
   return (
-    <>
-      {sessions.length === 0 && (
-        <div className="bd" style={{ padding: '8px 18px 0', fontSize: 13, color: 'var(--ink-45)' }}>
-          No sessions this month — tap a date to plan one.
-        </div>
-      )}
-      <SessionsCalendar
-        yearMonth={yearMonth}
-        sessions={sessions}
-        drillCounts={drillCounts}
-        today={today}
-        selectedTeamId={selectedTeamId}
-      />
-    </>
+    <MonthOverview
+      yearMonth={yearMonth}
+      sessions={sessions}
+      today={today}
+      selectedTeamId={selectedTeamId}
+    />
   )
 }
 

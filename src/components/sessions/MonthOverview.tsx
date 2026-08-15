@@ -1,7 +1,8 @@
 import Link from 'next/link'
 import type { Session } from '@/lib/types'
 import { formatMonthLabel, monthGrid, yearMonthPlusMonths } from '@/lib/dates'
-import { CalendarDayCell } from './CalendarDayCell'
+import { sessionsByDate } from '@/lib/session-groups'
+import { MonthDayDot } from './MonthDayDot'
 
 const WEEKDAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
@@ -11,34 +12,34 @@ function monthHref(yearMonth: string, teamId: string | null): string {
   return `/sessions?${params.toString()}`
 }
 
+/** Jumps into the agenda (always default view) at the given date's section. */
+function agendaHref(date: string, teamId: string | null): string {
+  const params = new URLSearchParams()
+  if (teamId) params.set('team', teamId)
+  const query = params.toString()
+  return `/sessions${query ? `?${query}` : ''}#date-${date}`
+}
+
 function newSessionHref(date: string, teamId: string | null): string {
   const params = new URLSearchParams({ date })
   if (teamId) params.set('team', teamId)
   return `/sessions/new?${params.toString()}`
 }
 
-export function SessionsCalendar({
+/** Month glance-and-jump (spec 2026-08-15): a dot per day with anything scheduled, tap to jump into the agenda at that date. */
+export function MonthOverview({
   yearMonth,
   sessions,
-  drillCounts,
   today,
   selectedTeamId,
 }: {
   yearMonth: string
   sessions: Session[]
-  drillCounts: Record<string, number>
   today: string
   selectedTeamId: string | null
 }) {
   const weeks = monthGrid(yearMonth)
-
-  const sessionsByDate = new Map<string, Session[]>()
-  for (const session of sessions) {
-    if (!session.date) continue
-    const existing = sessionsByDate.get(session.date) ?? []
-    existing.push(session)
-    sessionsByDate.set(session.date, existing)
-  }
+  const byDate = sessionsByDate(sessions)
 
   return (
     <div className="calendar" style={{ padding: '0 18px 32px' }}>
@@ -60,14 +61,14 @@ export function SessionsCalendar({
 
       <div className="calendar-grid">
         {weeks.flat().map(({ date, inMonth }) => (
-          <CalendarDayCell
+          <MonthDayDot
             key={date}
             date={date}
             dayNumber={Number(date.slice(8, 10))}
             inMonth={inMonth}
             isToday={date === today}
-            sessions={sessionsByDate.get(date) ?? []}
-            drillCounts={drillCounts}
+            hasSessions={byDate.has(date)}
+            agendaHref={agendaHref(date, selectedTeamId)}
             newSessionHref={newSessionHref(date, selectedTeamId)}
           />
         ))}

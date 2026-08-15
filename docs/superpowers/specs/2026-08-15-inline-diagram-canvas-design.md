@@ -32,7 +32,9 @@ Already embedded per the entry-simplification work (`AddDrillForm.tsx`) as a pla
 
 Only one diagram (or the new-diagram form) can be expanded at a time — expanding a second one collapses whichever was open, so the gallery never shows two open canvases at once.
 
-`/drills/[id]/diagrams/new/page.tsx` and `/drills/[id]/diagrams/[diagramId]/edit/page.tsx` are deleted; their logic (create/update calls, `existing`/`drillMeta` props) moves into `DiagramGallery`'s inline expansion.
+`/drills/[id]/diagrams/new/page.tsx` and `/drills/[id]/diagrams/[diagramId]/edit/page.tsx` are deleted; their logic (create/update calls, `existing` prop) moves into `DiagramGallery`'s inline expansion.
+
+`/drills/[id]/finish/page.tsx` is also deleted. It exists today only as the redirect target when `DiagramEditor` saves with a non-null `drillMeta` — a path that was already only reachable via the (now-inline) Add Drill diagram box passing `?entry=diagram`. With the canvas embedded directly in `AddDrillForm` and no `drillMeta` concept surviving into `DiagramCanvas` (see below), nothing sets that query param anymore, so `/finish` becomes unreachable dead code rather than an intentional route to keep around.
 
 ## Component structure
 

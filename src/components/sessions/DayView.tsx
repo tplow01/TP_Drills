@@ -18,6 +18,7 @@ export function DayView({
   selectedTeamId,
   drillCounts,
   plannedMinutes,
+  teamColors,
 }: {
   date: string
   today: string
@@ -26,6 +27,7 @@ export function DayView({
   selectedTeamId: string | null
   drillCounts: Record<string, number>
   plannedMinutes: Record<string, number>
+  teamColors: Map<string, string>
 }) {
   const isToday = date === today
 
@@ -75,11 +77,12 @@ export function DayView({
             drillCount={drillCounts[session.id] ?? 0}
             plannedMinutes={plannedMinutes[session.id]}
             href={`/sessions/${session.id}`}
+            color={session.team_id ? teamColors.get(session.team_id) : undefined}
           />
         ))
       )}
 
-      <DateSection label="Unscheduled" sessions={unscheduled} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
+      <DateSection label="Unscheduled" sessions={unscheduled} drillCounts={drillCounts} plannedMinutes={plannedMinutes} teamColors={teamColors} />
     </div>
   )
 }

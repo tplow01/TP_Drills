@@ -11,14 +11,12 @@ export function ViewToggle({
   date,
   weekStart,
   yearMonth,
-  navMonth,
   selectedTeamId,
 }: {
   activeView: ScheduleView
   date: string
   weekStart: string
   yearMonth: string
-  navMonth: string
   selectedTeamId: string | null
 }) {
   const options: { key: ScheduleView; label: string }[] = [
@@ -31,7 +29,7 @@ export function ViewToggle({
       {options.map((option) => (
         <Link
           key={option.key}
-          href={sessionsHref({ view: option.key, date, weekStart, yearMonth, navMonth, teamId: selectedTeamId })}
+          href={sessionsHref({ view: option.key, date, weekStart, yearMonth, teamId: selectedTeamId })}
           role="tab"
           aria-selected={activeView === option.key}
           className="view-toggle-tab"

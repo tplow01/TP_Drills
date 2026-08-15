@@ -1,14 +1,16 @@
 import Link from 'next/link'
-import type { Session, Team } from '@/lib/types'
+import type { Team } from '@/lib/types'
 import { sessionsHref } from '@/lib/schedule-href'
 import type { ScheduleView } from '@/lib/schedule-href'
-import { MiniMonthCalendar } from './MiniMonthCalendar'
+import { teamColor } from '@/lib/team-colors'
 
-/** Sidebar for the Schedule screen — mini-calendar navigator plus a team filter, mirroring Drills' filter sidebar (spec 2026-08-15). */
+/**
+ * The Schedule sidebar: a key to the schedule's team colors, not a
+ * calendar — each team's swatch is the same color used on its session rows
+ * and month dots, so the list doubles as a legend for what's on screen
+ * (spec 2026-08-15). Clicking a team filters the schedule to it.
+ */
 export function ScheduleSidebar({
-  navMonth,
-  monthSessions,
-  today,
   activeView,
   date,
   weekStart,
@@ -16,9 +18,6 @@ export function ScheduleSidebar({
   teams,
   selectedTeamId,
 }: {
-  navMonth: string
-  monthSessions: Session[]
-  today: string
   activeView: ScheduleView
   date: string
   weekStart: string
@@ -27,38 +26,37 @@ export function ScheduleSidebar({
   selectedTeamId: string | null
 }) {
   const teamHref = (teamId: string | null) =>
-    sessionsHref({ view: activeView, date, weekStart, yearMonth, navMonth, teamId })
+    sessionsHref({ view: activeView, date, weekStart, yearMonth, teamId })
 
   return (
     <div>
-      <MiniMonthCalendar
-        navMonth={navMonth}
-        sessions={monthSessions}
-        today={today}
-        activeView={activeView}
-        date={date}
-        weekStart={weekStart}
-        yearMonth={yearMonth}
-        selectedTeamId={selectedTeamId}
-      />
+      <div className="lbl" style={{ marginBottom: 8 }}>Teams</div>
 
-      {teams.length > 0 && (
-        <div style={{ marginTop: 22 }}>
-          <div className="lbl" style={{ marginBottom: 8 }}>Teams</div>
+      {teams.length === 0 ? (
+        <div className="bd" style={{ fontSize: 12, color: 'var(--ink-45)', lineHeight: 1.5 }}>
+          No teams yet.{' '}
+          <Link href="/teams/new" style={{ color: 'var(--accent)', fontWeight: 700 }}>
+            + Add one
+          </Link>
+        </div>
+      ) : (
+        <>
           <Link href={teamHref(null)} className="sidebar-team-link" data-selected={selectedTeamId === null ? 'true' : 'false'}>
+            <span className="team-swatch" style={{ background: 'var(--ink-30)' }} aria-hidden="true" />
             All teams
           </Link>
-          {teams.map((team) => (
+          {teams.map((team, i) => (
             <Link
               key={team.id}
               href={teamHref(team.id)}
               className="sidebar-team-link"
               data-selected={selectedTeamId === team.id ? 'true' : 'false'}
             >
+              <span className="team-swatch" style={{ background: teamColor(i) }} aria-hidden="true" />
               {team.name}
             </Link>
           ))}
-        </div>
+        </>
       )}
     </div>
   )

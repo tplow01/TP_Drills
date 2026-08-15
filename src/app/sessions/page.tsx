@@ -11,6 +11,7 @@ import {
 import {
   monthGrid, startOfWeek, today as todayISO, weekDates, yearMonthOf,
 } from '@/lib/dates'
+import { teamColorMap } from '@/lib/team-colors'
 import type { Session } from '@/lib/types'
 
 export const dynamic = 'force-dynamic'
@@ -26,9 +27,9 @@ function filterByTeam(sessions: Session[], selectedTeamId: string | null): Sessi
 export default async function SessionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ team?: string; view?: string; date?: string; week?: string; month?: string; nav?: string }>
+  searchParams: Promise<{ team?: string; view?: string; date?: string; week?: string; month?: string }>
 }) {
-  const { team: teamId, view, date: dateParam, week: weekParam, month, nav } = await searchParams
+  const { team: teamId, view, date: dateParam, week: weekParam, month } = await searchParams
   const selectedTeamId = typeof teamId === 'string' && teamId !== '' ? teamId : null
   const activeView: ScheduleView = view === 'week' ? 'week' : view === 'month' ? 'month' : 'day'
   const today = todayISO()
@@ -37,19 +38,8 @@ export default async function SessionsPage({
   const weekStart = isIsoDate(weekParam) ? startOfWeek(weekParam) : startOfWeek(today)
   const yearMonth = typeof month === 'string' && /^\d{4}-\d{2}$/.test(month) ? month : yearMonthOf(today)
 
-  // The sidebar mini-calendar's own displayed month — independent of
-  // `view`/`yearMonth` so paging it never switches the main pane out of
-  // Day/Week. Defaults off whichever date is actually in view.
-  const navMonth = typeof nav === 'string' && /^\d{4}-\d{2}$/.test(nav)
-    ? nav
-    : activeView === 'week' ? yearMonthOf(weekStart) : activeView === 'month' ? yearMonth : yearMonthOf(date)
-
-  const navWeeks = monthGrid(navMonth)
-  const [teams, navMonthSessions] = await Promise.all([
-    listTeams(),
-    listSessionsInWindow(navWeeks[0][0].date, navWeeks[navWeeks.length - 1][6].date),
-  ])
-  const sidebarSessions = filterByTeam(navMonthSessions, selectedTeamId)
+  const teams = await listTeams()
+  const teamColors = teamColorMap(teams)
 
   return (
     <main>
@@ -59,9 +49,6 @@ export default async function SessionsPage({
           style={{ width: 190, flex: 'none', borderRight: '1px solid var(--hairline)', padding: '14px 18px 28px' }}
         >
           <ScheduleSidebar
-            navMonth={navMonth}
-            monthSessions={sidebarSessions}
-            today={today}
             activeView={activeView}
             date={date}
             weekStart={weekStart}
@@ -78,7 +65,6 @@ export default async function SessionsPage({
               date={date}
               weekStart={weekStart}
               yearMonth={yearMonth}
-              navMonth={navMonth}
               selectedTeamId={selectedTeamId}
             />
             <div style={{ display: 'flex', gap: 8 }}>
@@ -88,11 +74,11 @@ export default async function SessionsPage({
           </div>
 
           {activeView === 'month' ? (
-            <MonthOverviewView yearMonth={yearMonth} today={today} selectedTeamId={selectedTeamId} />
+            <MonthOverviewView yearMonth={yearMonth} today={today} selectedTeamId={selectedTeamId} teamColors={teamColors} />
           ) : activeView === 'week' ? (
-            <WeekOverviewView weekStart={weekStart} today={today} selectedTeamId={selectedTeamId} />
+            <WeekOverviewView weekStart={weekStart} today={today} selectedTeamId={selectedTeamId} teamColors={teamColors} />
           ) : (
-            <DayOverviewView date={date} today={today} selectedTeamId={selectedTeamId} />
+            <DayOverviewView date={date} today={today} selectedTeamId={selectedTeamId} teamColors={teamColors} />
           )}
         </div>
       </div>
@@ -104,10 +90,12 @@ async function MonthOverviewView({
   yearMonth,
   today,
   selectedTeamId,
+  teamColors,
 }: {
   yearMonth: string
   today: string
   selectedTeamId: string | null
+  teamColors: Map<string, string>
 }) {
   const weeks = monthGrid(yearMonth)
   const from = weeks[0][0].date
@@ -122,6 +110,7 @@ async function MonthOverviewView({
       sessions={sessions}
       today={today}
       selectedTeamId={selectedTeamId}
+      teamColors={teamColors}
     />
   )
 }
@@ -130,10 +119,12 @@ async function WeekOverviewView({
   weekStart,
   today,
   selectedTeamId,
+  teamColors,
 }: {
   weekStart: string
   today: string
   selectedTeamId: string | null
+  teamColors: Map<string, string>
 }) {
   const dates = weekDates(weekStart)
   const [windowSessions, allSessions, drillCounts, plannedMinutes] = await Promise.all([
@@ -154,6 +145,7 @@ async function WeekOverviewView({
       selectedTeamId={selectedTeamId}
       drillCounts={drillCounts}
       plannedMinutes={plannedMinutes}
+      teamColors={teamColors}
     />
   )
 }
@@ -162,10 +154,12 @@ async function DayOverviewView({
   date,
   today,
   selectedTeamId,
+  teamColors,
 }: {
   date: string
   today: string
   selectedTeamId: string | null
+  teamColors: Map<string, string>
 }) {
   const [windowSessions, allSessions, drillCounts, plannedMinutes] = await Promise.all([
     listSessionsInWindow(date, date),
@@ -185,6 +179,7 @@ async function DayOverviewView({
       selectedTeamId={selectedTeamId}
       drillCounts={drillCounts}
       plannedMinutes={plannedMinutes}
+      teamColors={teamColors}
     />
   )
 }

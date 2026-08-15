@@ -19,12 +19,15 @@ export function SessionRow({
   plannedMinutes,
   href,
   dimmed = false,
+  color,
 }: {
   session: Session
   drillCount: number
   plannedMinutes?: number
   href: string
   dimmed?: boolean
+  /** The owning team's color, from `teamColorMap` — a thin left edge, the same swatch color as the sidebar key, so the two stay visually tied together (spec 2026-08-15). Omit for contexts with no team coloring (e.g. a single team's own page). */
+  color?: string
 }) {
   const durationLabel =
     plannedMinutes !== undefined
@@ -44,8 +47,17 @@ export function SessionRow({
     <Link
       href={href}
       className="session-row"
-      style={{ opacity: dimmed ? 0.6 : 1 }}
+      style={{ opacity: dimmed ? 0.6 : 1, position: 'relative', paddingLeft: color ? 18 : undefined }}
     >
+      {color && (
+        <span
+          aria-hidden="true"
+          style={{
+            position: 'absolute', left: 6, top: 10, bottom: 10, width: 4,
+            borderRadius: 999, background: color,
+          }}
+        />
+      )}
       <div style={{ width: 40, flexShrink: 0, textAlign: 'center' }}>
         {session.date ? (
           <>

@@ -10,6 +10,7 @@ export function DateSection({
   emptyLabel,
   drillCounts,
   plannedMinutes,
+  teamColors,
 }: {
   id?: string
   label: string
@@ -19,6 +20,8 @@ export function DateSection({
   emptyLabel?: string
   drillCounts: Record<string, number>
   plannedMinutes: Record<string, number>
+  /** From `teamColorMap` — omit for contexts with no team coloring (e.g. a single team's own page). */
+  teamColors?: Map<string, string>
 }) {
   if (sessions.length === 0 && !emptyLabel) return null
   return (
@@ -37,6 +40,7 @@ export function DateSection({
             plannedMinutes={plannedMinutes[session.id]}
             href={`/sessions/${session.id}`}
             dimmed={dimmed}
+            color={session.team_id ? teamColors?.get(session.team_id) : undefined}
           />
         ))
       )}

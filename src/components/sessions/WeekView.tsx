@@ -14,6 +14,7 @@ export function WeekView({
   selectedTeamId,
   drillCounts,
   plannedMinutes,
+  teamColors,
 }: {
   weekStart: string
   today: string
@@ -22,6 +23,7 @@ export function WeekView({
   selectedTeamId: string | null
   drillCounts: Record<string, number>
   plannedMinutes: Record<string, number>
+  teamColors: Map<string, string>
 }) {
   const byDate = sessionsByDate(sessions)
 
@@ -54,10 +56,11 @@ export function WeekView({
           emptyLabel="Nothing planned."
           drillCounts={drillCounts}
           plannedMinutes={plannedMinutes}
+          teamColors={teamColors}
         />
       ))}
 
-      <DateSection label="Unscheduled" sessions={unscheduled} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
+      <DateSection label="Unscheduled" sessions={unscheduled} drillCounts={drillCounts} plannedMinutes={plannedMinutes} teamColors={teamColors} />
     </div>
   )
 }

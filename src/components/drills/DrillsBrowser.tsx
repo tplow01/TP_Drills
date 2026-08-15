@@ -148,7 +148,7 @@ export function DrillsBrowser({
           any age. A drill belongs to one of them permanently.
         </p>
         <p style={{ fontSize: 13, color: 'var(--ink-45)', marginTop: 10 }}>
-          Quick add captures a name, a type and a scribble — finish it later.
+          Add drill captures a name, a type and a note — finish the rest later.
         </p>
       </div>
     ) : (

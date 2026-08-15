@@ -23,7 +23,8 @@ export default async function TeamPage({
     plannedMinutesBySession(),
   ])
   const sessions = allSessions.filter((s) => s.team_id === team.id)
-  const schedule = scheduleSessions(sessions, todayISO())
+  const today = todayISO()
+  const schedule = scheduleSessions(sessions, today)
 
   return (
     <main style={{ padding: '16px 18px 32px' }}>
@@ -36,7 +37,7 @@ export default async function TeamPage({
       <div style={{ marginTop: 16 }}>
         <a href={`/sessions/new?team=${team.id}`} className="header-cta">+ Session</a>
       </div>
-      <SessionsTimeline schedule={schedule} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
+      <SessionsTimeline schedule={schedule} today={today} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
     </main>
   )
 }

@@ -1,10 +1,9 @@
 import Link from 'next/link'
-import { TeamFilterChips } from '@/components/sessions/TeamFilterChips'
 import { SessionsTimeline } from '@/components/sessions/SessionsTimeline'
 import { MonthOverview } from '@/components/sessions/MonthOverview'
 import { ViewToggle } from '@/components/sessions/ViewToggle'
 import {
-  drillCountsBySession, listSessions, listSessionsInWindow, listTeams, plannedMinutesBySession,
+  drillCountsBySession, listSessions, listSessionsInWindow, plannedMinutesBySession,
 } from '@/lib/sessions-server'
 import { scheduleSessions } from '@/lib/session-groups'
 import { monthGrid, today as todayISO, yearMonthOf } from '@/lib/dates'
@@ -22,8 +21,6 @@ export default async function SessionsPage({
   const today = todayISO()
   const yearMonth = typeof month === 'string' && /^\d{4}-\d{2}$/.test(month) ? month : yearMonthOf(today)
 
-  const teams = await listTeams()
-
   return (
     <main>
       <div style={{ padding: '14px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
@@ -33,7 +30,6 @@ export default async function SessionsPage({
           <Link href="/sessions/new" className="header-cta">+ Session</Link>
         </div>
       </div>
-      <TeamFilterChips teams={teams} selectedTeamId={selectedTeamId} activeView={activeView} yearMonth={yearMonth} />
       {activeView === 'month' ? (
         <MonthOverviewView
           yearMonth={yearMonth}
@@ -93,5 +89,5 @@ async function AgendaView({
 
   const schedule = scheduleSessions(sessions, today)
 
-  return <SessionsTimeline schedule={schedule} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
+  return <SessionsTimeline schedule={schedule} today={today} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import type { Session } from '@/lib/types'
 import type { SessionSchedule } from '@/lib/session-groups'
-import { formatDayMarker } from '@/lib/dates'
+import { formatDayMarker, formatLongDate } from '@/lib/dates'
 import { SessionRow } from './SessionRow'
 
 function DateSection({
@@ -47,10 +47,13 @@ function DateSection({
  */
 export function SessionsTimeline({
   schedule,
+  today,
   drillCounts,
   plannedMinutes,
 }: {
   schedule: SessionSchedule
+  /** Today's ISO date — always shown as a heading so it's clear what day the agenda is anchored to, even with nothing scheduled today. */
+  today: string
   drillCounts: Record<string, number>
   plannedMinutes: Record<string, number>
 }) {
@@ -112,15 +115,24 @@ export function SessionsTimeline({
         </section>
       )}
 
-      {schedule.todayGroup && (
-        <DateSection
-          id={`date-${schedule.todayGroup.date}`}
-          label="Today"
-          sessions={schedule.todayGroup.sessions}
-          drillCounts={drillCounts}
-          plannedMinutes={plannedMinutes}
-        />
-      )}
+      <section id={schedule.todayGroup ? `date-${schedule.todayGroup.date}` : undefined} style={{ marginBottom: 8, scrollMarginTop: 16 }}>
+        <div className="lbl" style={{ margin: '16px 4px 2px' }}>Today · {formatLongDate(today)}</div>
+        {schedule.todayGroup ? (
+          schedule.todayGroup.sessions.map((session) => (
+            <SessionRow
+              key={session.id}
+              session={session}
+              drillCount={drillCounts[session.id] ?? 0}
+              plannedMinutes={plannedMinutes[session.id]}
+              href={`/sessions/${session.id}`}
+            />
+          ))
+        ) : (
+          <div className="bd" style={{ fontSize: 13, color: 'var(--ink-45)', padding: '4px 4px 8px' }}>
+            Nothing planned today.
+          </div>
+        )}
+      </section>
 
       {schedule.upcomingGroups.map((group) => (
         <DateSection

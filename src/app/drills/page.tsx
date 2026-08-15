@@ -1,6 +1,5 @@
 import { Suspense } from 'react'
 import { DrillsBrowser } from '@/components/drills/DrillsBrowser'
-import { ScreenHeader } from '@/components/ui/ScreenHeader'
 import { listDrills } from '@/lib/drills-server'
 import { getSession, listDrillStats } from '@/lib/sessions-server'
 
@@ -32,7 +31,8 @@ export default async function DrillsPage({
 
   return (
     <main>
-      <ScreenHeader title="Drills" backHref="/" backLabel="Hub" />
+      {/* No back-button header bar, same as Sessions — the top nav's active
+          "Drills" tab is already the "where am I" signal (spec 2026-08-15). */}
       {/* Filter and sort state lives in the URL (spec 7.1), so the browser
           reads useSearchParams and needs a Suspense boundary. */}
       <Suspense>

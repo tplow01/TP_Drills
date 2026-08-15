@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import {
@@ -159,19 +160,21 @@ export function DrillsBrowser({
       {/* Desktop sidebar */}
       <aside
         className="filter-sidebar"
-        style={{ width: 190, flex: 'none', borderRight: '1px solid var(--hairline)', padding: '18px 16px 28px' }}
+        style={{ width: 190, flex: 'none', borderRight: '1px solid var(--hairline)', padding: '14px 18px 28px' }}
       >
         {panel}
       </aside>
 
       <div
         className={session ? 'drills-content-with-tray' : undefined}
-        style={{ flex: 1, minWidth: 0, padding: '18px 18px 28px' }}
+        style={{ flex: 1, minWidth: 0, padding: '14px 18px 28px' }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           {!session && <Segment value={library} onChange={switchLibrary} />}
           <span style={{ marginLeft: 'auto' }}>
-            <Button href={`/drills/new?library=${library}&mode=quick`}>+ Quick add</Button>
+            <Link href={`/drills/new?library=${library}&mode=quick`} className="header-cta">
+              + Quick add
+            </Link>
           </span>
         </div>
 

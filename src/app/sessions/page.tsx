@@ -6,7 +6,7 @@ import { ViewToggle } from '@/components/sessions/ViewToggle'
 import {
   drillCountsBySession, listSessions, listSessionsInWindow, listTeams, plannedMinutesBySession,
 } from '@/lib/sessions-server'
-import { groupSessionsByDate } from '@/lib/session-groups'
+import { scheduleSessions } from '@/lib/session-groups'
 import { monthGrid, today as todayISO, yearMonthOf } from '@/lib/dates'
 
 export const dynamic = 'force-dynamic'
@@ -106,7 +106,7 @@ async function AgendaView({
     ? allSessions.filter((s) => s.team_id === selectedTeamId)
     : allSessions
 
-  const groups = groupSessionsByDate(sessions, today)
+  const schedule = scheduleSessions(sessions, today)
 
-  return <SessionsTimeline groups={groups} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
+  return <SessionsTimeline schedule={schedule} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
 }

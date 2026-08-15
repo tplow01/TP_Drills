@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { getTeam } from '@/lib/teams-server'
 import { listSessions, drillCountsBySession, plannedMinutesBySession } from '@/lib/sessions-server'
-import { groupSessionsByDate } from '@/lib/session-groups'
+import { scheduleSessions } from '@/lib/session-groups'
 import { SessionsTimeline } from '@/components/sessions/SessionsTimeline'
 import { today as todayISO } from '@/lib/dates'
 
@@ -23,7 +23,7 @@ export default async function TeamPage({
     plannedMinutesBySession(),
   ])
   const sessions = allSessions.filter((s) => s.team_id === team.id)
-  const groups = groupSessionsByDate(sessions, todayISO())
+  const schedule = scheduleSessions(sessions, todayISO())
 
   return (
     <main style={{ padding: '16px 18px 32px' }}>
@@ -36,7 +36,7 @@ export default async function TeamPage({
       <div style={{ marginTop: 16 }}>
         <a href={`/sessions/new?team=${team.id}`} className="header-cta">+ Session</a>
       </div>
-      <SessionsTimeline groups={groups} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
+      <SessionsTimeline schedule={schedule} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
     </main>
   )
 }

@@ -15,6 +15,7 @@ function makeSession(overrides: Partial<Session>): Session {
     age_band: null,
     session_notes: null,
     themes: [],
+    external_uid: null,
     reflected_at: null,
     created_at: '2026-01-01T00:00:00Z',
     updated_at: '2026-01-01T00:00:00Z',

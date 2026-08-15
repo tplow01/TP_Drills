@@ -46,6 +46,7 @@ export function ManualSessionForm({
         age_band: selectedTeam.age_band,
         session_notes: null,
         themes: [],
+        external_uid: null,
       })
       router.push(`/sessions/${session.id}`)
     } finally {

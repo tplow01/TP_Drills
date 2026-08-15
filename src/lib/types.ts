@@ -68,6 +68,7 @@ export interface Session {
   age_band: AgeBand | null
   session_notes: string | null
   themes: DrillType[]
+  external_uid: string | null
   reflected_at: string | null
   created_at: string
   updated_at: string

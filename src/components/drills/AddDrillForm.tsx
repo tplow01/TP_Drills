@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createDrill } from '@/lib/drills'
 import { createDiagram } from '@/lib/diagrams'
+import { deriveDrillMetadata } from '@/lib/diagram-metadata'
 import { typeLabel, typesFor } from '@/lib/taxonomy'
 import type { DiagramElement, DrillInput, DrillType, Library } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
@@ -65,23 +66,41 @@ export function AddDrillForm({ library }: { library: Library }) {
   const [elements, setElements] = useState<DiagramElement[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const derived = deriveDrillMetadata(elements)
 
   async function save() {
     if (saving) return
     setSaving(true)
     setError(null)
+
+    let drill
     try {
-      const drill = await createDrill(draftInput(library, name, type, note))
-      if (elements.length > 0) {
-        await createDiagram({
-          drill_id: drill.id, position: 0, title: null, pitch_preset: 'full', elements, sequence_group: null,
-        })
-      }
-      router.push(`/drills/${drill.id}/edit`)
+      drill = await createDrill({
+        ...draftInput(library, name, type, note),
+        cones_needed: derived.conesNeeded,
+        goals_needed: derived.goalsNeeded,
+        bibs_needed: derived.bibsNeeded,
+        players_min: derived.playerCount || null,
+        tags: derived.suggestedTags,
+      })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed')
       setSaving(false)
+      return
     }
+
+    if (elements.length > 0) {
+      try {
+        await createDiagram({
+          drill_id: drill.id, position: 0, title: null, pitch_preset: 'full', elements, sequence_group: null,
+        })
+      } catch {
+        // The drill itself already saved as a draft — don't strand the coach
+        // retrying into duplicate drills over a diagram-only failure. They
+        // can add the diagram again from the drill's own page.
+      }
+    }
+    router.push(`/drills/${drill.id}/edit`)
   }
 
   return (
@@ -129,6 +148,9 @@ export function AddDrillForm({ library }: { library: Library }) {
           <Field label="Diagram (optional)">
             <DiagramCanvas elements={elements} onChange={setElements} />
           </Field>
+          <div style={{ fontSize: 12, color: 'var(--ink-45)', marginTop: 8 }}>
+            {derived.playerCount} players · {derived.conesNeeded} cones · {derived.goalsNeeded} goals
+          </div>
         </div>
       </div>
     </div>

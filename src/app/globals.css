@@ -563,6 +563,15 @@ a { color: inherit; text-decoration: none; }
   .month-day-skeleton { min-height: 44px; }
 }
 
+.schedule-skeleton-row {
+  height: 64px;
+  border-radius: var(--radius);
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  margin-bottom: 8px;
+  opacity: 0.5;
+}
+
 /* Inline drill picker: a slide-over on top of the Planner (spec 2026-08-14
    phase 3 — full filter width, not a cramped side panel, so adding a drill
    never means leaving the session). Desktop: right-hand drawer with its own

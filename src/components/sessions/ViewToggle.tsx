@@ -21,8 +21,8 @@ export function ViewToggle({
   selectedTeamId: string | null
 }) {
   const options: { key: 'month' | 'agenda'; label: string }[] = [
-    { key: 'month', label: 'Month' },
     { key: 'agenda', label: 'Agenda' },
+    { key: 'month', label: 'Month' },
   ]
   return (
     <div role="tablist" className="view-toggle">

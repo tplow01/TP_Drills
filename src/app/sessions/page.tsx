@@ -18,7 +18,7 @@ export default async function SessionsPage({
 }) {
   const { team: teamId, view, month } = await searchParams
   const selectedTeamId = typeof teamId === 'string' && teamId !== '' ? teamId : null
-  const activeView = view === 'agenda' ? 'agenda' : 'month'
+  const activeView = view === 'month' ? 'month' : 'agenda'
   const today = todayISO()
   const yearMonth = typeof month === 'string' && /^\d{4}-\d{2}$/.test(month) ? month : yearMonthOf(today)
 
@@ -37,7 +37,7 @@ export default async function SessionsPage({
           <Link href="/sessions/new" className="header-cta">+ Session</Link>
         </div>
       </div>
-      <TeamFilterChips teams={teams} selectedTeamId={selectedTeamId} />
+      <TeamFilterChips teams={teams} selectedTeamId={selectedTeamId} activeView={activeView} yearMonth={yearMonth} />
       {activeView === 'month' ? (
         <MonthOverviewView
           yearMonth={yearMonth}

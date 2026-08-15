@@ -1,22 +1,17 @@
-/** Skeleton grid while the month's sessions load — avoids a blank flash on the new primary view. */
+/** Skeleton rows while the agenda loads — avoids a blank flash on the default view. */
 export default function SessionsLoading() {
   return (
     <main>
       <div style={{ padding: '14px 18px 0', display: 'flex', justifyContent: 'space-between' }}>
         <div className="view-toggle" style={{ opacity: 0.4 }}>
-          <span className="view-toggle-tab" data-active="true">Month</span>
-          <span className="view-toggle-tab" data-active="false">Agenda</span>
+          <span className="view-toggle-tab" data-active="true">Agenda</span>
+          <span className="view-toggle-tab" data-active="false">Month</span>
         </div>
       </div>
-      <div className="calendar" style={{ padding: '0 18px 32px' }}>
-        <div className="calendar-nav">
-          <span className="hl calendar-month-label" style={{ opacity: 0.4 }}>Loading…</span>
-        </div>
-        <div className="calendar-grid">
-          {Array.from({ length: 35 }, (_, i) => (
-            <div key={i} className="calendar-skeleton-cell" />
-          ))}
-        </div>
+      <div style={{ padding: '20px 18px 32px' }}>
+        {Array.from({ length: 4 }, (_, i) => (
+          <div key={i} className="schedule-skeleton-row" />
+        ))}
       </div>
     </main>
   )

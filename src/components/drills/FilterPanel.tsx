@@ -69,6 +69,7 @@ export function FilterPanel({
   sortKey,
   sortDir,
   onSortChange,
+  availableTags = [],
 }: {
   library: Library
   filter: DrillFilter
@@ -76,6 +77,12 @@ export function FilterPanel({
   sortKey: SortKey
   sortDir: SortDir
   onSortChange: (key: SortKey, dir: SortDir) => void
+  /**
+   * Distinct tags present in the current drill set. The group only renders
+   * once there's at least one — an empty multi-select is worse than no
+   * filter at all (design critique finding: don't ship a dead axis).
+   */
+  availableTags?: string[]
 }) {
   const toggle = <T,>(list: T[], value: T): T[] =>
     list.includes(value) ? list.filter((v) => v !== value) : [...list, value]
@@ -121,6 +128,19 @@ export function FilterPanel({
           />
         ))}
       </Group>
+
+      {availableTags.length > 0 && (
+        <Group label="Tags">
+          {availableTags.map((tag) => (
+            <Checkbox
+              key={tag}
+              label={tag}
+              checked={filter.tags.includes(tag)}
+              onToggle={() => onChange({ ...filter, tags: toggle<string>(filter.tags, tag) })}
+            />
+          ))}
+        </Group>
+      )}
 
       <Group label="Players today">
         <TextInput

@@ -68,11 +68,17 @@ function readCount(params: URLSearchParams, key: string): number | null {
 export function parseBrowseState(params: URLSearchParams): DrillBrowseState {
   const library: Library = params.get('lib') === 'goalkeeping' ? 'goalkeeping' : 'outfield'
 
+  // Tags are open text, not a fixed enum like type/age/duration, so there's
+  // no `allowed` list to validate against — any non-empty value survives.
+  const rawTags = params.getAll('tag').flatMap((v) => v.split(','))
+  const tags = [...new Set(rawTags.map((t) => t.trim()).filter((t) => t !== ''))]
+
   const filter: DrillFilter = {
     types: readList<DrillType>(params, 'type', ALL_TYPES),
     ageBands: readList<AgeBand>(params, 'age', AGE_BANDS),
     durations: readList<DurationBucket>(params, 'dur', DURATION_BUCKETS),
     playersToday: readCount(params, 'players'),
+    tags,
     search: params.get('q') ?? '',
   }
 
@@ -97,6 +103,7 @@ export function browseStateToQuery(state: DrillBrowseState): string {
   if (state.filter.types.length > 0) params.set('type', state.filter.types.join(','))
   if (state.filter.ageBands.length > 0) params.set('age', state.filter.ageBands.join(','))
   if (state.filter.durations.length > 0) params.set('dur', state.filter.durations.join(','))
+  if (state.filter.tags.length > 0) params.set('tag', state.filter.tags.join(','))
   if (state.filter.playersToday !== null) params.set('players', String(state.filter.playersToday))
   if (state.filter.search.trim() !== '') params.set('q', state.filter.search)
   if (state.sortKey !== 'duration' || state.sortDir !== 'asc') {

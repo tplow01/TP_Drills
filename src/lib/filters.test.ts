@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import type { Drill } from './types'
 import type { DrillFilter } from './filters'
 import {
-  EMPTY_FILTER, activeFilterChips, activeFilterCount, filterDrills,
+  EMPTY_FILTER, activeFilterChips, activeFilterCount, availableTags, filterDrills,
   matchesDuration, matchesPlayers, matchesSearch, mostRestrictiveAxis,
   removeFilterChip, sortDrills,
 } from './filters'
@@ -129,6 +129,31 @@ describe('filterDrills', () => {
     const gone = drill({ id: 'z', deleted_at: '2026-01-01T00:00:00Z' })
     expect(filterDrills([rondo, gone], EMPTY_FILTER).map((d) => d.id)).toEqual(['a'])
   })
+
+  it('ORs within the tags axis', () => {
+    const wet = drill({ id: 'x', tags: ['wet-weather'] })
+    const u9 = drill({ id: 'y', tags: ['u9s'] })
+    const untagged = drill({ id: 'z', tags: [] })
+    const got = filterDrills([wet, u9, untagged], { ...EMPTY_FILTER, tags: ['wet-weather', 'u9s'] })
+    expect(got.map((d) => d.id)).toEqual(['x', 'y'])
+  })
+
+  it('excludes an untagged drill once any tag filter is active', () => {
+    const untagged = drill({ id: 'z', tags: [] })
+    expect(filterDrills([untagged], { ...EMPTY_FILTER, tags: ['wet-weather'] })).toHaveLength(0)
+  })
+})
+
+describe('availableTags', () => {
+  it('is empty when no drill has a tag', () => {
+    expect(availableTags([drill({ tags: [] })])).toEqual([])
+  })
+
+  it('collects distinct tags across drills, alphabetical', () => {
+    const a = drill({ id: 'a', tags: ['u9s', 'wet-weather'] })
+    const b = drill({ id: 'b', tags: ['wet-weather', 'indoor'] })
+    expect(availableTags([a, b])).toEqual(['indoor', 'u9s', 'wet-weather'])
+  })
 })
 
 describe('sortDrills', () => {
@@ -163,6 +188,7 @@ describe('activeFilterChips', () => {
     types: ['passing', 'possession_rondo'],
     ageBands: ['U9-U11'],
     durations: ['10to20'],
+    tags: ['wet-weather'],
     playersToday: 14,
   }
 
@@ -172,6 +198,7 @@ describe('activeFilterChips', () => {
       { axis: 'types', value: 'possession_rondo', label: 'Possession / Rondo' },
       { axis: 'ageBands', value: 'U9-U11', label: 'U9-U11' },
       { axis: 'durations', value: '10to20', label: '10–20 min' },
+      { axis: 'tags', value: 'wet-weather', label: 'wet-weather' },
       { axis: 'playersToday', value: null, label: 'fits 14' },
     ])
   })
@@ -192,6 +219,7 @@ describe('removeFilterChip', () => {
     types: ['passing', 'possession_rondo'],
     ageBands: ['U9-U11'],
     durations: ['10to20'],
+    tags: ['wet-weather', 'u9s'],
     playersToday: 14,
     search: 'rondo',
   }
@@ -202,7 +230,13 @@ describe('removeFilterChip', () => {
     expect(next.types).toEqual(['possession_rondo'])
     expect(next.ageBands).toEqual(['U9-U11'])
     expect(next.durations).toEqual(['10to20'])
+    expect(next.tags).toEqual(['wet-weather', 'u9s'])
     expect(next.playersToday).toBe(14)
+  })
+
+  it('removes one tag and leaves its siblings', () => {
+    const tagChip = activeFilterChips(busy).find((c) => c.axis === 'tags')!
+    expect(removeFilterChip(busy, tagChip).tags).toEqual(['u9s'])
   })
 
   it('clears the single-valued players axis', () => {
@@ -237,8 +271,9 @@ describe('activeFilterCount', () => {
       ...EMPTY_FILTER,
       types: ['passing', 'shooting'],
       durations: ['lte10'],
+      tags: ['wet-weather'],
       playersToday: 14,
-    })).toBe(3)
+    })).toBe(4)
   })
 
   it('does not count search as a filter axis', () => {
@@ -263,5 +298,15 @@ describe('mostRestrictiveAxis', () => {
 
   it('returns null when the filter is empty', () => {
     expect(mostRestrictiveAxis([rondo], EMPTY_FILTER)).toBeNull()
+  })
+
+  it('considers the tags axis alongside the others', () => {
+    const untaggedRondo = drill({ id: 'a', type: 'possession_rondo', tags: [] })
+    const axis = mostRestrictiveAxis([untaggedRondo], {
+      ...EMPTY_FILTER,
+      types: ['possession_rondo'],
+      tags: ['wet-weather'],
+    })
+    expect(axis).toBe('tags')
   })
 })

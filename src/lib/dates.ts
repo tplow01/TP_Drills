@@ -65,3 +65,50 @@ export function formatShortDate(iso: string): string {
   const d = new Date(year, month - 1, day)
   return new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(d)
 }
+
+/** 'YYYY-MM' -> 'August 2026'. */
+export function formatMonthLabel(yearMonth: string): string {
+  const [y, m] = yearMonth.split('-').map(Number)
+  return new Intl.DateTimeFormat('en-GB', { month: 'long', year: 'numeric' }).format(new Date(y, m - 1, 1))
+}
+
+/** 'YYYY-MM' plus `months` (may be negative), as 'YYYY-MM'. */
+export function yearMonthPlusMonths(yearMonth: string, months: number): string {
+  const [y, m] = yearMonth.split('-').map(Number)
+  const date = new Date(y, m - 1 + months, 1)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`
+}
+
+/** The 'YYYY-MM' containing `iso`. */
+export function yearMonthOf(iso: string): string {
+  return iso.slice(0, 7)
+}
+
+/**
+ * Full weeks (Mon-first) covering every day of `yearMonth`, so the grid has
+ * no partial rows. Each day carries `inMonth` for dimming the lead/trail days
+ * that belong to adjacent months.
+ */
+export function monthGrid(yearMonth: string): { date: string; inMonth: boolean }[][] {
+  const [y, m] = yearMonth.split('-').map(Number)
+  const firstOfMonth = new Date(y, m - 1, 1)
+  const lastOfMonth = new Date(y, m, 0)
+
+  // JS getDay(): 0=Sun..6=Sat. Convert to Mon-first offset (0=Mon..6=Sun).
+  const leadDays = (firstOfMonth.getDay() + 6) % 7
+  const trailDays = (7 - ((lastOfMonth.getDay() + 6) % 7) - 1 + 7) % 7
+
+  const start = new Date(y, m - 1, 1 - leadDays)
+  const totalDays = leadDays + lastOfMonth.getDate() + trailDays
+
+  const days: { date: string; inMonth: boolean }[] = []
+  for (let i = 0; i < totalDays; i += 1) {
+    const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + i)
+    const iso = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    days.push({ date: iso, inMonth: d.getMonth() === m - 1 })
+  }
+
+  const weeks: { date: string; inMonth: boolean }[][] = []
+  for (let i = 0; i < days.length; i += 7) weeks.push(days.slice(i, i + 7))
+  return weeks
+}

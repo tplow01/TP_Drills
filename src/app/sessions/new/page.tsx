@@ -1,15 +1,15 @@
 import Link from 'next/link'
 import { listTeams } from '@/lib/sessions-server'
-import { NewSessionChoice } from '@/components/sessions/NewSessionChoice'
+import { ManualSessionForm } from '@/components/sessions/ManualSessionForm'
 
 export const dynamic = 'force-dynamic'
 
 export default async function NewSessionPage({
   searchParams,
 }: {
-  searchParams: Promise<{ team?: string }>
+  searchParams: Promise<{ team?: string; date?: string }>
 }) {
-  const { team } = await searchParams
+  const { team, date } = await searchParams
   const teams = await listTeams()
 
   return (
@@ -21,7 +21,11 @@ export default async function NewSessionPage({
           <Link href="/teams/new">Create a team</Link> first — a session always belongs to one.
         </p>
       ) : (
-        <NewSessionChoice teams={teams} defaultTeamId={typeof team === 'string' ? team : null} />
+        <ManualSessionForm
+          teams={teams}
+          defaultTeamId={typeof team === 'string' ? team : null}
+          defaultDate={typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date) ? date : null}
+        />
       )}
     </main>
   )

@@ -12,3 +12,4 @@ tsconfig.tsbuildinfo
 AGENTS.md
 CLAUDE.md
 .worktrees/
+.claude/

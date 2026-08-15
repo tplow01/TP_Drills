@@ -10,11 +10,19 @@ export interface DrillFilter {
   ageBands: AgeBand[]
   durations: DurationBucket[]
   playersToday: number | null
+  tags: string[]
   search: string
 }
 
 export const EMPTY_FILTER: DrillFilter = {
-  types: [], ageBands: [], durations: [], playersToday: null, search: '',
+  types: [], ageBands: [], durations: [], playersToday: null, tags: [], search: '',
+}
+
+/** The distinct tags present across a set of drills, alphabetical. Empty until a drill has at least one tag. */
+export function availableTags(drills: Drill[]): string[] {
+  const set = new Set<string>()
+  for (const d of drills) for (const t of d.tags) set.add(t)
+  return [...set].sort((a, b) => a.localeCompare(b))
 }
 
 const DURATION_LABELS: Record<DurationBucket, string> = {
@@ -63,6 +71,7 @@ export function matchesFilter(drill: Drill, filter: DrillFilter): boolean {
   if (filter.durations.length > 0) {
     if (!filter.durations.some((b) => matchesDuration(drill.duration_mins, b))) return false
   }
+  if (filter.tags.length > 0 && !filter.tags.some((t) => drill.tags.includes(t))) return false
   if (!matchesPlayers(drill, filter.playersToday)) return false
   if (!matchesSearch(drill, filter.search)) return false
   return true
@@ -92,11 +101,12 @@ export function activeFilterCount(filter: DrillFilter): number {
   if (filter.types.length > 0) n++
   if (filter.ageBands.length > 0) n++
   if (filter.durations.length > 0) n++
+  if (filter.tags.length > 0) n++
   if (filter.playersToday !== null) n++
   return n
 }
 
-export type FilterAxis = 'types' | 'ageBands' | 'durations' | 'playersToday'
+export type FilterAxis = 'types' | 'ageBands' | 'durations' | 'tags' | 'playersToday'
 
 /**
  * One removable filter value. Spec 7.1 requires active filters to be
@@ -110,7 +120,7 @@ export type FilterAxis = 'types' | 'ageBands' | 'durations' | 'playersToday'
 export interface ActiveFilterChip {
   axis: FilterAxis
   /** The value to remove from its axis. `null` for the single-valued axis. */
-  value: DrillType | AgeBand | DurationBucket | null
+  value: DrillType | AgeBand | DurationBucket | string | null
   label: string
 }
 
@@ -125,6 +135,9 @@ export function activeFilterChips(filter: DrillFilter): ActiveFilterChip[] {
   }
   for (const bucket of filter.durations) {
     chips.push({ axis: 'durations', value: bucket, label: DURATION_LABELS[bucket] })
+  }
+  for (const tag of filter.tags) {
+    chips.push({ axis: 'tags', value: tag, label: tag })
   }
   if (filter.playersToday !== null) {
     chips.push({ axis: 'playersToday', value: null, label: `fits ${filter.playersToday}` })
@@ -141,6 +154,8 @@ export function removeFilterChip(filter: DrillFilter, chip: ActiveFilterChip): D
       return { ...filter, ageBands: filter.ageBands.filter((b) => b !== chip.value) }
     case 'durations':
       return { ...filter, durations: filter.durations.filter((d) => d !== chip.value) }
+    case 'tags':
+      return { ...filter, tags: filter.tags.filter((t) => t !== chip.value) }
     case 'playersToday':
       return { ...filter, playersToday: null }
   }
@@ -151,7 +166,7 @@ export function removeFilterChip(filter: DrillFilter, chip: ActiveFilterChip): D
  * only Clear all. Returns the axis whose removal recovers the most drills.
  */
 export function mostRestrictiveAxis(drills: Drill[], filter: DrillFilter): FilterAxis | null {
-  const axes: FilterAxis[] = ['types', 'ageBands', 'durations', 'playersToday']
+  const axes: FilterAxis[] = ['types', 'ageBands', 'durations', 'tags', 'playersToday']
   const active = axes.filter((a) =>
     a === 'playersToday' ? filter.playersToday !== null : filter[a].length > 0,
   )

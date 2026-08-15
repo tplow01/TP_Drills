@@ -15,6 +15,7 @@ const busy: DrillBrowseState = {
     ageBands: [],
     durations: ['10to20'],
     playersToday: 6,
+    tags: ['wet-weather', 'u9s'],
     search: 'diving',
   },
   sortKey: 'players_min',
@@ -31,8 +32,13 @@ describe('parseBrowseState', () => {
   })
 
   it('reads every axis back', () => {
-    expect(parse('lib=goalkeeping&type=shot_stopping,crosses&dur=10to20&players=6&q=diving&sort=players_min:desc'))
+    expect(parse('lib=goalkeeping&type=shot_stopping,crosses&dur=10to20&players=6&tag=wet-weather,u9s&q=diving&sort=players_min:desc'))
       .toEqual(busy)
+  })
+
+  it('reads tags as free text, trimmed and de-duplicated, no allowlist', () => {
+    expect(parse('tag= wet-weather ,u9s,wet-weather').filter.tags).toEqual(['wet-weather', 'u9s'])
+    expect(parse('tag=').filter.tags).toEqual([])
   })
 
   it('accepts repeated params as well as comma-separated ones', () => {

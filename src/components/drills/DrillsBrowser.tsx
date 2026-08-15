@@ -3,7 +3,7 @@
 import { useSearchParams } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 import {
-  EMPTY_FILTER, activeFilterCount, filterDrills, mostRestrictiveAxis, sortDrills,
+  EMPTY_FILTER, activeFilterCount, availableTags, filterDrills, mostRestrictiveAxis, sortDrills,
 } from '@/lib/filters'
 import type { DrillFilter } from '@/lib/filters'
 import { browseStateToQuery, drillHref, parseBrowseState } from '@/lib/drill-query'
@@ -22,6 +22,7 @@ const AXIS_LABELS: Record<string, string> = {
   types: 'type',
   ageBands: 'age band',
   durations: 'duration',
+  tags: 'tag',
   playersToday: 'player count',
 }
 
@@ -122,6 +123,8 @@ export function DrillsBrowser({
     setState((s) => ({ ...s, library: next, filter: EMPTY_FILTER }))
   }
 
+  const tagOptions = useMemo(() => availableTags(finished), [finished])
+
   const panel = (
     <FilterPanel
       library={library}
@@ -130,6 +133,7 @@ export function DrillsBrowser({
       sortKey={sortKey}
       sortDir={sortDir}
       onSortChange={(k, d) => setState((s) => ({ ...s, sortKey: k, sortDir: d }))}
+      availableTags={tagOptions}
     />
   )
 

@@ -4,28 +4,54 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import {
+  addDrillToSession,
   removeSessionDrill,
   reorderSessionDrills,
   setDurationOverride,
 } from '@/lib/sessions'
 import { effectiveDuration, timingSummary } from '@/lib/session-timing'
-import type { SessionDrillWithDrill, SessionWithDrills } from '@/lib/types'
+import type { Drill, DrillStats, SessionDrillWithDrill, SessionWithDrills } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { TextInput } from '@/components/ui/TextInput'
+import { InlineDrillPicker } from './InlineDrillPicker'
 
 /**
  * The right pane of the planner: the drills inside a session, in order,
- * with their timings (spec 7.4). Adding drills happens on the Drills screen
- * (Task 8's session tray), not here — the empty state and "add drill"
- * affordance below just route there with the session id on the URL.
+ * with their timings (spec 7.4). Adding drills opens the inline picker
+ * (`InlineDrillPicker`) as a drawer over this screen — no navigation away
+ * (2026-08-14 IA rebuild, phase 3). `/drills?session=<id>` remains as a
+ * secondary "browse full library" escape hatch on the empty state.
  */
 export function SessionBuilder({
   session,
+  libraryDrills,
+  stats,
 }: {
   session: SessionWithDrills
+  /** Every non-deleted drill in the session's own library (spec: adding is scoped to the session's library). */
+  libraryDrills: Drill[]
+  stats: Record<string, DrillStats>
 }) {
   const router = useRouter()
   const drills = session.drills
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [addBusyId, setAddBusyId] = useState<string | null>(null)
+  const [addError, setAddError] = useState<string | null>(null)
+  const addedDrillIds = useMemo(() => drills.map((d) => d.drill_id), [drills])
+
+  async function handleAddDrill(drill: Drill) {
+    if (addBusyId !== null || addedDrillIds.includes(drill.id)) return
+    setAddError(null)
+    setAddBusyId(drill.id)
+    try {
+      await addDrillToSession(session.id, drill.id)
+      router.refresh()
+    } catch (e) {
+      setAddError(e instanceof Error ? e.message : `Failed to add ${drill.name}`)
+    } finally {
+      setAddBusyId(null)
+    }
+  }
 
   const summary = useMemo(
     () => timingSummary(drills, session.target_minutes),
@@ -137,7 +163,9 @@ export function SessionBuilder({
     <div style={{ padding: '18px 18px 28px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
         <div className="lbl">Drills · {session.drills.length}</div>
-        <a href={`/drills?session=${session.id}`} className="header-cta">+ Add drill</a>
+        <button type="button" onClick={() => setPickerOpen(true)} className="header-cta" style={{ border: 'none' }}>
+          + Add drill
+        </button>
       </div>
 
       <div
@@ -178,7 +206,7 @@ export function SessionBuilder({
           <p className="bd" style={{ fontSize: 13, color: 'var(--ink-45)', marginBottom: 12 }}>
             No drills in this session yet.
           </p>
-          <Button variant="secondary" href={`/drills?session=${session.id}`}>
+          <Button variant="secondary" onClick={() => setPickerOpen(true)}>
             Add from the library
           </Button>
         </div>
@@ -302,6 +330,32 @@ export function SessionBuilder({
           </div>
         </div>
       )}
+
+      {pickerOpen && (
+        <InlineDrillPicker
+          library={session.library}
+          sessionId={session.id}
+          drills={libraryDrills}
+          addedDrillIds={addedDrillIds}
+          pendingId={addBusyId}
+          addError={addError}
+          stats={stats}
+          onAdd={handleAddDrill}
+          onClose={() => setPickerOpen(false)}
+        />
+      )}
+
+      {/* Secondary escape hatch: the full /drills page with its own tray,
+          for coaches who want more room than the drawer gives. */}
+      <div style={{ marginTop: 12, textAlign: 'center' }}>
+        <a
+          href={`/drills?session=${session.id}`}
+          className="bd"
+          style={{ fontSize: 11, color: 'var(--ink-30)' }}
+        >
+          Browse the full library instead →
+        </a>
+      </div>
     </div>
   )
 }

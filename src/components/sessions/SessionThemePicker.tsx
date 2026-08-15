@@ -14,7 +14,7 @@ export function SessionThemePicker({
   library: Library
   initialThemes: DrillType[]
 }) {
-  const [themes, setThemes] = useState<DrillType[]>(initialThemes)
+  const [themes, setThemes] = useState<DrillType[]>(initialThemes ?? [])
   const [pending, setPending] = useState(false)
   const options = typesFor(library)
 

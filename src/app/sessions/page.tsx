@@ -1,43 +1,112 @@
 import Link from 'next/link'
 import { TeamFilterChips } from '@/components/sessions/TeamFilterChips'
 import { SessionsTimeline } from '@/components/sessions/SessionsTimeline'
+import { SessionsCalendar } from '@/components/sessions/SessionsCalendar'
+import { ViewToggle } from '@/components/sessions/ViewToggle'
 import {
-  drillCountsBySession, listSessions, listTeams, plannedMinutesBySession,
+  drillCountsBySession, listSessions, listSessionsInWindow, listTeams, plannedMinutesBySession,
 } from '@/lib/sessions-server'
 import { groupSessionsByDate } from '@/lib/session-groups'
-import { today as todayISO } from '@/lib/dates'
+import { monthGrid, today as todayISO, yearMonthOf } from '@/lib/dates'
 
 export const dynamic = 'force-dynamic'
 
 export default async function SessionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ team?: string }>
+  searchParams: Promise<{ team?: string; view?: string; month?: string }>
 }) {
-  const { team: teamId } = await searchParams
+  const { team: teamId, view, month } = await searchParams
   const selectedTeamId = typeof teamId === 'string' && teamId !== '' ? teamId : null
+  const activeView = view === 'agenda' ? 'agenda' : 'month'
+  const today = todayISO()
+  const yearMonth = typeof month === 'string' && /^\d{4}-\d{2}$/.test(month) ? month : yearMonthOf(today)
 
-  const [allSessions, teams, drillCounts, plannedMinutes] = await Promise.all([
-    listSessions(),
+  const [teams, drillCounts, plannedMinutes] = await Promise.all([
     listTeams(),
     drillCountsBySession(),
     plannedMinutesBySession(),
   ])
 
+  return (
+    <main>
+      <div style={{ padding: '14px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+        <ViewToggle activeView={activeView} yearMonth={yearMonth} selectedTeamId={selectedTeamId} />
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Link href="/teams/new" className="header-cta" data-variant="secondary">+ Team</Link>
+          <Link href="/sessions/new" className="header-cta">+ Session</Link>
+        </div>
+      </div>
+      <TeamFilterChips teams={teams} selectedTeamId={selectedTeamId} />
+      {activeView === 'month' ? (
+        <CalendarView
+          yearMonth={yearMonth}
+          today={today}
+          selectedTeamId={selectedTeamId}
+          drillCounts={drillCounts}
+        />
+      ) : (
+        <AgendaView selectedTeamId={selectedTeamId} today={today} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
+      )}
+    </main>
+  )
+}
+
+async function CalendarView({
+  yearMonth,
+  today,
+  selectedTeamId,
+  drillCounts,
+}: {
+  yearMonth: string
+  today: string
+  selectedTeamId: string | null
+  drillCounts: Record<string, number>
+}) {
+  const weeks = monthGrid(yearMonth)
+  const from = weeks[0][0].date
+  const to = weeks[weeks.length - 1][6].date
+
+  const allSessions = await listSessionsInWindow(from, to)
   const sessions = selectedTeamId
     ? allSessions.filter((s) => s.team_id === selectedTeamId)
     : allSessions
 
-  const groups = groupSessionsByDate(sessions, todayISO())
-
   return (
-    <main>
-      <div style={{ padding: '14px 18px 0', display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
-        <Link href="/teams/new" className="header-cta" data-variant="secondary">+ Team</Link>
-        <Link href="/sessions/new" className="header-cta">+ Session</Link>
-      </div>
-      <TeamFilterChips teams={teams} selectedTeamId={selectedTeamId} />
-      <SessionsTimeline groups={groups} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
-    </main>
+    <>
+      {sessions.length === 0 && (
+        <div className="bd" style={{ padding: '8px 18px 0', fontSize: 13, color: 'var(--ink-45)' }}>
+          No sessions this month — tap a date to plan one.
+        </div>
+      )}
+      <SessionsCalendar
+        yearMonth={yearMonth}
+        sessions={sessions}
+        drillCounts={drillCounts}
+        today={today}
+        selectedTeamId={selectedTeamId}
+      />
+    </>
   )
+}
+
+async function AgendaView({
+  selectedTeamId,
+  today,
+  drillCounts,
+  plannedMinutes,
+}: {
+  selectedTeamId: string | null
+  today: string
+  drillCounts: Record<string, number>
+  plannedMinutes: Record<string, number>
+}) {
+  const allSessions = await listSessions()
+  const sessions = selectedTeamId
+    ? allSessions.filter((s) => s.team_id === selectedTeamId)
+    : allSessions
+
+  const groups = groupSessionsByDate(sessions, today)
+
+  return <SessionsTimeline groups={groups} drillCounts={drillCounts} plannedMinutes={plannedMinutes} />
 }

@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { getSession } from '@/lib/sessions-server'
+import { getSession, listDrillStats } from '@/lib/sessions-server'
+import { listDrills } from '@/lib/drills-server'
 import { SessionThemePicker } from '@/components/sessions/SessionThemePicker'
 import { SessionBuilder } from '@/components/sessions/SessionBuilder'
 import { formatShortDate, formatTime } from '@/lib/dates'
@@ -17,6 +18,14 @@ export default async function SessionDetailPage({
   const { id } = await params
   const session = await getSession(id).catch(() => null)
   if (!session) notFound()
+
+  // Scoped to the session's own library — the inline picker never needs the
+  // other library, so there's no reason to fetch it (spec: adding a drill is
+  // scoped to the session's library).
+  const [libraryDrills, stats] = await Promise.all([
+    listDrills(session.library),
+    listDrillStats(),
+  ])
 
   const teamLabel = session.team?.name ?? session.name
   const metaParts = [
@@ -41,7 +50,7 @@ export default async function SessionDetailPage({
       </div>
 
       <div style={{ marginTop: 20 }}>
-        <SessionBuilder session={session} />
+        <SessionBuilder session={session} libraryDrills={libraryDrills} stats={stats} />
       </div>
     </main>
   )

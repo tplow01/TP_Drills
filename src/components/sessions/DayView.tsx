@@ -19,6 +19,7 @@ export function DayView({
   drillCounts,
   plannedMinutes,
   teamColors,
+  nextDate,
 }: {
   date: string
   today: string
@@ -28,6 +29,7 @@ export function DayView({
   drillCounts: Record<string, number>
   plannedMinutes: Record<string, number>
   teamColors: Map<string, string>
+  nextDate: string | null
 }) {
   const isToday = date === today
 
@@ -66,8 +68,19 @@ export function DayView({
       )}
 
       {sessions.length === 0 ? (
-        <div className="bd" style={{ fontSize: 13, color: 'var(--ink-45)', padding: '12px 4px' }}>
-          Nothing planned this day.
+        <div style={{ padding: '12px 4px' }}>
+          <div className="bd" style={{ fontSize: 13, color: 'var(--ink-45)' }}>
+            Nothing planned this day.
+          </div>
+          {nextDate && (
+            <Link
+              href={sessionsHref({ view: 'day', date: nextDate, teamId: selectedTeamId })}
+              className="bd"
+              style={{ fontSize: 12, fontWeight: 700, color: 'var(--accent)', display: 'inline-block', marginTop: 8 }}
+            >
+              Skip to next session →
+            </Link>
+          )}
         </div>
       ) : (
         sessions.map((session) => (

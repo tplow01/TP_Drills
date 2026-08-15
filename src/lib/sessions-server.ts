@@ -61,6 +61,26 @@ export async function listSessionsInWindow(fromISO: string, toISO: string): Prom
   return data as Session[]
 }
 
+/** Server-side. The nearest date strictly after `afterISO` with at least
+    one scheduled session (optionally restricted to one team) — powers the
+    day view's "Skip to next session" link when the current day is empty.
+    Null if nothing is scheduled after that date. */
+export async function nextSessionDate(afterISO: string, teamId: string | null): Promise<string | null> {
+  const supabase = await createServerClient()
+  let query = supabase
+    .from('session')
+    .select('date')
+    .gt('date', afterISO)
+    .not('date', 'is', null)
+    .order('date', { ascending: true })
+    .limit(1)
+  if (teamId) query = query.eq('team_id', teamId)
+
+  const { data, error } = await query
+  if (error) throw new Error(`Failed to find next session date: ${error.message}`)
+  return data && data.length > 0 ? (data[0].date as string) : null
+}
+
 /** Server-side. Number of drills in each session, keyed by session id. */
 export async function drillCountsBySession(): Promise<Record<string, number>> {
   const supabase = await createServerClient()

@@ -7,7 +7,7 @@ import { ScheduleSidebar } from '@/components/sessions/ScheduleSidebar'
 import { ScheduleMobileTeamsTrigger } from '@/components/sessions/ScheduleMobileTeamsTrigger'
 import type { ScheduleView } from '@/lib/schedule-href'
 import {
-  drillCountsBySession, listSessions, listSessionsInWindow, listTeams, plannedMinutesBySession,
+  drillCountsBySession, listSessions, listSessionsInWindow, listTeams, plannedMinutesBySession, nextSessionDate,
 } from '@/lib/sessions-server'
 import {
   monthGrid, startOfWeek, today as todayISO, weekDates, yearMonthOf,
@@ -173,6 +173,7 @@ async function DayOverviewView({
   ])
   const sessions = filterByTeam(windowSessions, selectedTeamId)
   const unscheduled = filterByTeam(allSessions.filter((s) => s.date === null), selectedTeamId)
+  const nextDate = sessions.length === 0 ? await nextSessionDate(date, selectedTeamId) : null
 
   return (
     <DayView
@@ -184,6 +185,7 @@ async function DayOverviewView({
       drillCounts={drillCounts}
       plannedMinutes={plannedMinutes}
       teamColors={teamColors}
+      nextDate={nextDate}
     />
   )
 }

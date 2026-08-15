@@ -18,7 +18,6 @@ export function AppNav() {
   return (
     <nav className="app-nav">
       <div className="app-nav-inner">
-        <span className="app-nav-brand">TP DRILLS</span>
         <div className="app-nav-tabs">
           {TABS.map((tab) => {
             const active = isActive(pathname, tab.href)

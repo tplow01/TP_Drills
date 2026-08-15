@@ -3,9 +3,10 @@ import { DayView } from '@/components/sessions/DayView'
 import { WeekView } from '@/components/sessions/WeekView'
 import { MonthOverview } from '@/components/sessions/MonthOverview'
 import { ViewToggle } from '@/components/sessions/ViewToggle'
+import { ScheduleSidebar } from '@/components/sessions/ScheduleSidebar'
 import type { ScheduleView } from '@/lib/schedule-href'
 import {
-  drillCountsBySession, listSessions, listSessionsInWindow, plannedMinutesBySession,
+  drillCountsBySession, listSessions, listSessionsInWindow, listTeams, plannedMinutesBySession,
 } from '@/lib/sessions-server'
 import {
   monthGrid, startOfWeek, today as todayISO, weekDates, yearMonthOf,
@@ -18,12 +19,16 @@ function isIsoDate(value: unknown): value is string {
   return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)
 }
 
+function filterByTeam(sessions: Session[], selectedTeamId: string | null): Session[] {
+  return selectedTeamId ? sessions.filter((s) => s.team_id === selectedTeamId) : sessions
+}
+
 export default async function SessionsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ team?: string; view?: string; date?: string; week?: string; month?: string }>
+  searchParams: Promise<{ team?: string; view?: string; date?: string; week?: string; month?: string; nav?: string }>
 }) {
-  const { team: teamId, view, date: dateParam, week: weekParam, month } = await searchParams
+  const { team: teamId, view, date: dateParam, week: weekParam, month, nav } = await searchParams
   const selectedTeamId = typeof teamId === 'string' && teamId !== '' ? teamId : null
   const activeView: ScheduleView = view === 'week' ? 'week' : view === 'month' ? 'month' : 'day'
   const today = todayISO()
@@ -32,34 +37,67 @@ export default async function SessionsPage({
   const weekStart = isIsoDate(weekParam) ? startOfWeek(weekParam) : startOfWeek(today)
   const yearMonth = typeof month === 'string' && /^\d{4}-\d{2}$/.test(month) ? month : yearMonthOf(today)
 
+  // The sidebar mini-calendar's own displayed month — independent of
+  // `view`/`yearMonth` so paging it never switches the main pane out of
+  // Day/Week. Defaults off whichever date is actually in view.
+  const navMonth = typeof nav === 'string' && /^\d{4}-\d{2}$/.test(nav)
+    ? nav
+    : activeView === 'week' ? yearMonthOf(weekStart) : activeView === 'month' ? yearMonth : yearMonthOf(date)
+
+  const navWeeks = monthGrid(navMonth)
+  const [teams, navMonthSessions] = await Promise.all([
+    listTeams(),
+    listSessionsInWindow(navWeeks[0][0].date, navWeeks[navWeeks.length - 1][6].date),
+  ])
+  const sidebarSessions = filterByTeam(navMonthSessions, selectedTeamId)
+
   return (
     <main>
-      <div style={{ padding: '14px 18px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
-        <ViewToggle
-          activeView={activeView}
-          date={date}
-          weekStart={weekStart}
-          yearMonth={yearMonth}
-          selectedTeamId={selectedTeamId}
-        />
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Link href="/teams/new" className="header-cta" data-variant="secondary">+ Team</Link>
-          <Link href="/sessions/new" className="header-cta">+ Session</Link>
+      <div style={{ display: 'flex', alignItems: 'flex-start' }}>
+        <aside
+          className="filter-sidebar"
+          style={{ width: 190, flex: 'none', borderRight: '1px solid var(--hairline)', padding: '14px 18px 28px' }}
+        >
+          <ScheduleSidebar
+            navMonth={navMonth}
+            monthSessions={sidebarSessions}
+            today={today}
+            activeView={activeView}
+            date={date}
+            weekStart={weekStart}
+            yearMonth={yearMonth}
+            teams={teams}
+            selectedTeamId={selectedTeamId}
+          />
+        </aside>
+
+        <div style={{ flex: 1, minWidth: 0, padding: '14px 18px 28px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            <ViewToggle
+              activeView={activeView}
+              date={date}
+              weekStart={weekStart}
+              yearMonth={yearMonth}
+              navMonth={navMonth}
+              selectedTeamId={selectedTeamId}
+            />
+            <div style={{ display: 'flex', gap: 8 }}>
+              <Link href="/teams/new" className="header-cta" data-variant="secondary">+ Team</Link>
+              <Link href="/sessions/new" className="header-cta">+ Session</Link>
+            </div>
+          </div>
+
+          {activeView === 'month' ? (
+            <MonthOverviewView yearMonth={yearMonth} today={today} selectedTeamId={selectedTeamId} />
+          ) : activeView === 'week' ? (
+            <WeekOverviewView weekStart={weekStart} today={today} selectedTeamId={selectedTeamId} />
+          ) : (
+            <DayOverviewView date={date} today={today} selectedTeamId={selectedTeamId} />
+          )}
         </div>
       </div>
-      {activeView === 'month' ? (
-        <MonthOverviewView yearMonth={yearMonth} today={today} selectedTeamId={selectedTeamId} />
-      ) : activeView === 'week' ? (
-        <WeekOverviewView weekStart={weekStart} today={today} selectedTeamId={selectedTeamId} />
-      ) : (
-        <DayOverviewView date={date} today={today} selectedTeamId={selectedTeamId} />
-      )}
     </main>
   )
-}
-
-function filterByTeam(sessions: Session[], selectedTeamId: string | null): Session[] {
-  return selectedTeamId ? sessions.filter((s) => s.team_id === selectedTeamId) : sessions
 }
 
 async function MonthOverviewView({

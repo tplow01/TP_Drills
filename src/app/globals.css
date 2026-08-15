@@ -333,8 +333,6 @@ a { color: inherit; text-decoration: none; }
   justify-content: center;
 }
 
-.app-nav-brand { display: none; }
-
 .app-nav-tabs {
   display: flex;
   width: 100%;
@@ -367,14 +365,6 @@ a { color: inherit; text-decoration: none; }
     padding: 14px 20px;
     max-width: 1100px;
     margin: 0 auto;
-  }
-
-  .app-nav-brand {
-    display: block;
-    font-size: 14px;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    color: var(--ink);
   }
 
   .app-nav-tabs { width: auto; gap: 22px; }
@@ -649,3 +639,71 @@ a { color: inherit; text-decoration: none; }
   .drill-picker-header { padding: 12px 14px; }
   .drill-picker-results { padding: 14px 14px 24px; }
 }
+
+/* Schedule sidebar: mini-calendar navigator + team filter (spec 2026-08-15,
+   mirrors the Drills filter-sidebar structure/spacing). */
+.mini-calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.mini-calendar-nav-btn {
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  font-size: 13px;
+  color: var(--ink-70);
+}
+
+.mini-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+.mini-calendar-weekday {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--ink-30);
+  padding-bottom: 2px;
+}
+
+.mini-calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  border-radius: 5px;
+  font-size: 10px;
+  color: var(--ink-70);
+}
+.mini-calendar-day[data-in-month="false"] { opacity: 0.35; }
+.mini-calendar-day[data-today="true"] { color: var(--accent); font-weight: 700; }
+.mini-calendar-day[data-current="true"] { background: var(--accent); color: var(--ground); font-weight: 700; }
+.mini-calendar-day:hover { background: var(--chip-bg); }
+.mini-calendar-day[data-current="true"]:hover { background: var(--accent); }
+
+.mini-calendar-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+.mini-calendar-day[data-current="true"] .mini-calendar-dot { background: var(--ground); }
+
+.sidebar-team-link {
+  display: block;
+  padding: 6px 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-70);
+  border-radius: var(--radius-sm);
+}
+.sidebar-team-link[data-selected="true"] { color: var(--accent); background: var(--accent-tint); }

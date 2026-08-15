@@ -3,11 +3,13 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { createDrill } from '@/lib/drills'
+import { createDiagram } from '@/lib/diagrams'
 import { typeLabel, typesFor } from '@/lib/taxonomy'
-import type { DrillInput, DrillType, Library } from '@/lib/types'
+import type { DiagramElement, DrillInput, DrillType, Library } from '@/lib/types'
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { TextInput } from '@/components/ui/TextInput'
+import { DiagramCanvas } from '@/components/diagrams/DiagramCanvas'
 
 const selectStyle: React.CSSProperties = {
   width: '100%',
@@ -21,24 +23,14 @@ const selectStyle: React.CSSProperties = {
   color: 'var(--ink)',
 }
 
-const diagramBoxStyle = (disabled: boolean): React.CSSProperties => ({
-  width: '100%',
-  minHeight: 180,
-  background: 'var(--field-bg)',
-  border: '1px dashed var(--hairline)',
-  borderRadius: 'var(--radius)',
-  color: 'var(--ink-45)',
-  fontSize: 13,
-  fontFamily: 'inherit',
-  fontWeight: 500,
-  cursor: disabled ? 'not-allowed' : 'pointer',
-  opacity: disabled ? 0.5 : 1,
-})
-
 /**
  * Every drill created here is missing the fields a session needs (setup
- * beyond one note, coaching points, etc.), so it always saves as a draft —
- * unlike `DrillForm`, there's no need to compute `missingFields`.
+ * beyond one note, coaching points, etc.), so it always saves as a draft.
+ * Name defaults to "Untitled drill" when left blank — saving with only a
+ * drawing and no name is a deliberate, supported path (inline diagram
+ * canvas redesign, 2026-08-15): there is only one save action on this
+ * screen now, so it can't gate on name the way a separate "start from a
+ * diagram" button once did.
  */
 function draftInput(library: Library, name: string, type: DrillType, note: string): DrillInput {
   const trimmedNote = note.trim()
@@ -70,16 +62,22 @@ export function AddDrillForm({ library }: { library: Library }) {
   const [name, setName] = useState('')
   const [type, setType] = useState<DrillType>(typesFor(library)[0])
   const [note, setNote] = useState('')
+  const [elements, setElements] = useState<DiagramElement[]>([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  async function saveAndGo(destination: (id: string) => string) {
+  async function save() {
     if (saving) return
     setSaving(true)
     setError(null)
     try {
       const drill = await createDrill(draftInput(library, name, type, note))
-      router.push(destination(drill.id))
+      if (elements.length > 0) {
+        await createDiagram({
+          drill_id: drill.id, position: 0, title: null, pitch_preset: 'full', elements, sequence_group: null,
+        })
+      }
+      router.push(`/drills/${drill.id}/edit`)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed')
       setSaving(false)
@@ -122,24 +120,14 @@ export function AddDrillForm({ library }: { library: Library }) {
 
           {error && <div style={{ fontSize: 12, color: 'var(--accent)', marginBottom: 12 }}>{error}</div>}
 
-          <Button
-            onClick={() => saveAndGo((id) => `/drills/${id}/edit`)}
-            disabled={saving || name.trim() === ''}
-          >
+          <Button onClick={save} disabled={saving}>
             {saving ? 'Saving…' : 'Add drill'}
           </Button>
         </div>
 
         <div style={{ flex: '1 1 280px', minWidth: 260 }}>
           <Field label="Diagram (optional)">
-            <button
-              type="button"
-              onClick={() => saveAndGo((id) => `/drills/${id}/diagrams/new?entry=diagram`)}
-              disabled={saving}
-              style={diagramBoxStyle(saving)}
-            >
-              Tap to sketch the pitch layout
-            </button>
+            <DiagramCanvas elements={elements} onChange={setElements} />
           </Field>
         </div>
       </div>

@@ -14,10 +14,12 @@ export function TeamForm({ existingTeams }: { existingTeams: Team[] }) {
   const [ageBand, setAgeBand] = useState<AgeBand | ''>('')
   const [color, setColor] = useState(() => suggestedTeamColor(existingTeams.map((t) => t.color)))
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSaving(true)
+    setError(null)
     try {
       const team = await createTeam({
         name,
@@ -27,7 +29,8 @@ export function TeamForm({ existingTeams }: { existingTeams: Team[] }) {
         byga_url: null,
       })
       router.push(`/teams/${team.id}`)
-    } finally {
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to create team')
       setSaving(false)
     }
   }
@@ -79,6 +82,7 @@ export function TeamForm({ existingTeams }: { existingTeams: Team[] }) {
               type="button"
               onClick={() => setColor(c)}
               aria-label={c}
+              aria-pressed={color === c}
               style={{
                 width: 28, height: 28, borderRadius: '50%', cursor: 'pointer',
                 border: color === c ? '2px solid var(--ink)' : '1px solid var(--hairline)',
@@ -88,6 +92,8 @@ export function TeamForm({ existingTeams }: { existingTeams: Team[] }) {
           ))}
         </div>
       </div>
+
+      {error && <div style={{ fontSize: 12, color: 'var(--accent)' }}>{error}</div>}
 
       <button type="submit" disabled={saving || name.trim() === ''} className="header-cta" style={{ alignSelf: 'flex-start' }}>
         {saving ? 'Creating…' : 'Create team'}

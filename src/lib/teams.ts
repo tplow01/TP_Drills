@@ -33,7 +33,11 @@ export async function connectCalendar(teamId: string, url: string): Promise<Team
     impose). Returns how many new sessions were created. */
 export async function syncCalendar(teamId: string): Promise<{ created: number }> {
   const response = await fetch(`/api/teams/${teamId}/sync-calendar`, { method: 'POST' })
-  const body = await response.json()
-  if (!response.ok) throw new Error(body.error ?? 'Sync failed')
-  return body as { created: number }
+  if (!response.ok) {
+    // A non-JSON error body (e.g. a framework error page) shouldn't surface
+    // as a confusing "Unexpected token" parse failure.
+    const body = await response.json().catch(() => null)
+    throw new Error(body?.error ?? 'Sync failed')
+  }
+  return (await response.json()) as { created: number }
 }

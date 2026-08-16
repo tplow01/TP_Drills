@@ -83,7 +83,7 @@ function grabPoint(el: DiagramElement): { cx: number; cy: number } {
 /**
  * Renders one diagram's elements as SVG. Shared by every place a diagram
  * shows up — read-only (`DiagramView`) and the editable canvas
- * (`DiagramEditor`) — so the exact same markup that gets saved is what gets
+ * (`DiagramCanvas`) — so the exact same markup that gets saved is what gets
  * displayed everywhere. `selectedId`/`draggingId`/`onPointerDownElement` are
  * only passed by the editor; a read-only render omits them.
  */

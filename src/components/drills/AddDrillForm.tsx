@@ -10,19 +10,8 @@ import type { DiagramElement, DrillInput, DrillType, Library } from '@/lib/types
 import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { TextInput } from '@/components/ui/TextInput'
+import { selectStyle } from '@/components/ui/selectStyle'
 import { DiagramCanvas } from '@/components/diagrams/DiagramCanvas'
-
-const selectStyle: React.CSSProperties = {
-  width: '100%',
-  background: 'var(--field-bg)',
-  border: '1px solid var(--hairline)',
-  borderRadius: 'var(--radius-sm)',
-  padding: '10px 12px',
-  fontFamily: 'inherit',
-  fontWeight: 500,
-  fontSize: 14,
-  color: 'var(--ink)',
-}
 
 /**
  * Every drill created here is missing the fields a session needs (setup

@@ -10,19 +10,8 @@ import { Button } from '@/components/ui/Button'
 import { Field } from '@/components/ui/Field'
 import { TextInput, TextArea } from '@/components/ui/TextInput'
 import { PointListField } from '@/components/ui/PointListField'
+import { selectStyle } from '@/components/ui/selectStyle'
 import { PhotoField } from './PhotoField'
-
-const selectStyle: React.CSSProperties = {
-  width: '100%',
-  background: 'var(--field-bg)',
-  border: '1px solid var(--hairline)',
-  borderRadius: 'var(--radius-sm)',
-  padding: '10px 12px',
-  fontFamily: 'inherit',
-  fontWeight: 500,
-  fontSize: 14,
-  color: 'var(--ink)',
-}
 
 /**
  * Equipment counts are never negative and never blank — the `min={0}` on a
@@ -118,8 +107,7 @@ export function DrillForm({
         </Field>
       </div>
 
-      <>
-          {draft.library === 'outfield' ? (
+      {draft.library === 'outfield' ? (
             <div style={{ marginBottom: 15 }}>
               <Field label="Age band">
                 <select
@@ -263,7 +251,6 @@ export function DrillForm({
           <div style={{ marginBottom: 18 }}>
             <PhotoField value={draft.image_url} onChange={(url) => set('image_url', url)} />
           </div>
-        </>
 
       {invalid.length > 0 && (
         <div style={{ border: '1px solid var(--accent-border)', borderRadius: 'var(--radius)', padding: 12, marginBottom: 15 }}>

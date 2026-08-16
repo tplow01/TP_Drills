@@ -12,10 +12,12 @@ import { DeleteDiagramDialog } from './DeleteDiagramDialog'
 import { Button } from '@/components/ui/Button'
 
 /**
- * Local, keyed-by-target save/cancel wrapper around `DiagramCanvas`. Keying
- * this component by `diagram?.id ?? 'new'` at the call site (below) means
- * switching which diagram is expanded remounts fresh `title`/`elements`
- * state automatically, instead of manually syncing state to a changing prop.
+ * Local save/cancel wrapper around `DiagramCanvas`. Only ever rendered
+ * while its target (a specific diagram, or the "new diagram" slot) is the
+ * gallery's single expanded item — mounting and unmounting with that
+ * condition gives it fresh `title`/`elements` state for free each time a
+ * different target is expanded, instead of manually syncing state to a
+ * changing prop.
  */
 function InlineDiagramEditor({
   drillId,

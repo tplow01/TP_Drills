@@ -18,7 +18,10 @@ const EQUIPMENT_TOOLS = [
 ]
 // One shape, color-only (carried over from the previous diagram editor
 // revamp, 2026-08-13) — placing a player is the same interaction as placing
-// equipment: pick a color, drag one marker onto the canvas.
+// equipment: pick a color, drag one marker onto the canvas. Older diagrams
+// may still contain the retired 'player-circle'/'player-triangle'/
+// 'player-omega' types; those keep rendering correctly (DiagramElements.tsx's
+// PlayerEl), they just can't be placed again from this palette.
 const PLAYER_TOOLS = [{ type: 'player-filled', label: 'Player' }]
 const ARROW_TOOLS = [
   { type: 'arrow-solid', label: 'Solid' }, { type: 'arrow-dashed', label: 'Dashed' },
@@ -301,6 +304,7 @@ export function DiagramCanvas({
           return (
             <button
               key={tool.type}
+              type="button"
               onPointerDown={(e) => handlePaletteDown(activeGroup, tool.type, e)}
               onPointerMove={handlePaletteMove}
               onPointerUp={handlePaletteUp}
@@ -320,8 +324,10 @@ export function DiagramCanvas({
           {PALETTE_COLORS.map((c) => (
             <button
               key={c}
+              type="button"
               onClick={() => setColor(c)}
               aria-label={c}
+              aria-pressed={color === c}
               style={{
                 width: 26, height: 26, borderRadius: '50%', cursor: 'pointer', flex: 'none',
                 border: color === c ? '2px solid var(--ink)' : '1px solid var(--hairline)',

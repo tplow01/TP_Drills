@@ -51,7 +51,7 @@ export function deriveDrillMetadata(elements: DiagramElement[]): DerivedDrillMet
     conesNeeded,
     goalsNeeded,
     // No bib element type exists in the palette (EQUIPMENT_TOOLS in
-    // DiagramEditor.tsx) — bibs_needed stays a manual DrillForm field.
+    // DiagramCanvas.tsx) — bibs_needed stays a manual DrillForm field.
     bibsNeeded: false,
   }
 }
